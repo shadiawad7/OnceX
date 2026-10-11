@@ -1,0 +1,9 @@
+import { useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors } from '../theme/colors';
+export default function SelectionList({ label, value, options, onChange, disabled = false }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; disabled?: boolean }) {
+ const [open, setOpen] = useState(false);
+ return <><Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={label} onPress={() => setOpen(true)} style={styles.control}><Text style={styles.text}>{options.find(option => option.value === value)?.label || 'Seleccionar'} ▾</Text></Pressable><Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}><SafeAreaView style={styles.safe}><View style={styles.header}><Text style={styles.title}>{label}</Text><Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={styles.control}><Text style={styles.text}>Cerrar</Text></Pressable></View><FlatList data={options} keyExtractor={item => item.value} renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityState={{ selected: item.value === value }} style={[styles.control,item.value === value && styles.selected]} onPress={() => { onChange(item.value); setOpen(false); }}><Text style={styles.text}>{item.label}</Text></Pressable>}/></SafeAreaView></Modal></>;
+}
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.background, padding: 20 }, header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, title: { color: colors.white, fontSize: 22, fontWeight: '800', flex: 1 }, control: { padding: 14, borderRadius: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, marginVertical: 4 }, selected: { borderColor: colors.red }, text: { color: colors.white } });

@@ -1,0 +1,4 @@
+project_id = "oncex"
+
+[functions.create-account]
+verify_jwt = false
