@@ -10,7 +10,12 @@ import Brand from '../components/Brand';
 import { supabase } from '../lib/supabase';
 import { authErrorMessage } from '../lib/auth';
 
+// Play the introduction once per app run, not on every return to login.
+let loginIntroSeen = false;
+
 export default function Login() {
+  const [skipIntro] = useState(() => loginIntroSeen);
+  useEffect(() => { loginIntroSeen = true; }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
@@ -35,22 +40,23 @@ export default function Login() {
   const logoScale = useAnimatedValue(0.03);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const introLogoWidth = Math.min(screenWidth * 0.8, screenHeight * 1.2, 420);
-  const backgroundOpacity = useAnimatedValue(0);
-  const contentOpacity = useAnimatedValue(0);
-  const contentOffset = useAnimatedValue(18);
+  const backgroundOpacity = useAnimatedValue(skipIntro ? 1 : 0);
+  const contentOpacity = useAnimatedValue(skipIntro ? 1 : 0);
+  const contentOffset = useAnimatedValue(skipIntro ? 0 : 18);
   const [logoExpanded, setLogoExpanded] = useState(false);
   const [backgroundReady, setBackgroundReady] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
-  const [introFinished, setIntroFinished] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState<boolean | null>(skipIntro ? true : null);
+  const [introFinished, setIntroFinished] = useState(skipIntro);
   const contentReady = introFinished || reduceMotion === true;
 
   useEffect(() => {
+    if (skipIntro) return;
     let active = true;
     AccessibilityInfo.isReduceMotionEnabled()
       .then(value => { if (active) setReduceMotion(value); })
       .catch(() => { if (active) setReduceMotion(false); });
     return () => { active = false; };
-  }, []);
+  }, [skipIntro]);
 
   useEffect(() => {
     if (reduceMotion === null) return;

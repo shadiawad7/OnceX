@@ -17,7 +17,7 @@ export async function chooseProfilePhoto(): Promise<ProfilePhoto | null> {
 }
 export async function saveProfilePhoto(userId: string, photo: ProfilePhoto) {
  const result=await client().storage.from('profile-photos').upload(`${userId}/portrait`,decode(photo.base64),{contentType:photo.contentType,upsert:true,cacheControl:'60'});
- if(result.error) throw new Error('La cuenta está creada, pero no se ha guardado la foto. Comprueba que las fotos están activadas en Supabase y reintenta.');
+ if(result.error) throw new Error('No se ha guardado la foto. Comprueba que las fotos están activadas en Supabase y reintenta.');
  const attached=await client().rpc('attach_profile_photo',{target_user:userId});
  if(attached.error) throw new Error('La foto se ha subido, pero no se ha vinculado a la ficha. Reintenta guardar la foto.');
 }
@@ -26,5 +26,6 @@ export async function profilePhotoUrls(paths: string[]): Promise<Map<string,stri
  if(!unique.length) return new Map();
  const result=await client().storage.from('profile-photos').createSignedUrls(unique,3600);
  if(result.error) return new Map();
- return new Map(result.data.filter(item=>!!item.signedUrl&&!!item.path).map(item=>[item.path!,item.signedUrl!]));
+ const version=Date.now();
+ return new Map(result.data.filter(item=>!!item.signedUrl&&!!item.path).map(item=>[item.path!,`${item.signedUrl!}&v=${version}`]));
 }

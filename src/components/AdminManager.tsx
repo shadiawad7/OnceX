@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { listPages } from '../lib/listPages';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -129,7 +130,7 @@ export default function AdminManager({ section }: { section: AdminSection }) {
  </View>;
  return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><FlatList ref={listRef} data={loading ? [] : rows} keyExtractor={item => String(item.id)} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" ListHeaderComponent={header} ListEmptyComponent={!loading && !error ? <Text style={styles.body}>No hay registros.</Text> : null} renderItem={({ item }) => section === 'activity'
   ? <View style={styles.card}><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
-  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => begin(item)} style={styles.card}><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text><Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
+  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text><Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
   /></KeyboardAvoidingView>;
 }
 const styles = StyleSheet.create({

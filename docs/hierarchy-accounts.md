@@ -134,3 +134,18 @@ Comprobaciones: lint, TypeScript y `supabase/tests/profile_photos.sql`, con
 pruebas de subida autorizada, lectura dentro del club, bloqueo de otras cuentas
 y vinculación al ranking. Las pruebas SQL locales usan tablas Storage simuladas;
 la subida real desde galería requiere aplicar la migración al proyecto Supabase.
+
+### Alta completa y ficha de consulta del jugador
+
+Ejecuta `supabase/migrations/202610110003_player_registration.sql` después de
+la migración de fotos. Añade `profiles.jersey_number` (1–99) y retira la edición
+propia de ficha y foto para las cuentas que solo tienen el rol jugador.
+Los entrenadores y administradores conservan la edición dentro de su ámbito.
+
+En el alta del jugador se completan foto, posición, fecha de nacimiento y dorsal,
+además de nombre y credenciales. Si falla el guardado de la ficha o de la foto,
+se puede reintentar con la cuenta ya creada. Equipo y categoría se obtienen de
+la asignación al equipo. Actualmente el dorsal se guarda en el perfil general.
+La ficha no muestra el formulario de edición a una cuenta de jugador.
+La prueba `supabase/tests/player_registration.sql` comprueba que el entrenador
+puede guardar el dorsal y que el jugador no modifica su ficha ni su foto.
