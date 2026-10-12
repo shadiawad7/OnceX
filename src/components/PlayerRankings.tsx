@@ -48,7 +48,7 @@ export default function PlayerRankings({ clubId, canOpenProfiles }: { clubId?: s
  const players=rankPlayers(rows,field,filter);
  const podium=players.slice(0,3);
  const podiumIds=new Set(podium.map(player=>player.player_id));
- const tablePlayers=players.filter(player=>!podiumIds.has(player.player_id));
+ const tablePlayers=players;
  function open(id:string) {if(canOpenProfiles) router.push({pathname:'/players/[id]',params:{id}});}
  const header=<>
   <View style={styles.clubHeader}><View style={styles.titleLockup}><Text style={styles.trophy}>♛</Text><Text style={styles.title}>RANKINGS ONCEX</Text></View>{clubs.length>0 && <View style={styles.clubPicker}><SelectionList label="Club" value={selectedClub} options={clubs.map(club=>({value:club.id,label:club.name}))} onChange={value=> {setSelectedClub(value);setFilter('');}}/></View>}</View>
@@ -58,10 +58,11 @@ export default function PlayerRankings({ clubId, canOpenProfiles }: { clubId?: s
    const player=podium[index];
    const metal=['#F4C64F','#BCC6CE','#DB925C'][index];
    const shades = index===0 ? ['#FFE58A','#7A510A','#251905'] as const : index===1 ? ['#D9E3E8','#4A535B','#151A20'] as const : ['#F2AE79','#693419','#22120C'] as const;
-   if(!player) return <View key={`empty-${index}`} style={[styles.podiumCard,{borderColor:metal},index===0&&styles.winner]}><View style={[styles.cardInner,index===0&&styles.emptyCardInner]}>{index===0 && <Text style={styles.crown}>♛</Text>}<View style={[styles.medal,{borderColor:metal}]}><Text style={[styles.medalNumber,{color:metal}]}>{index+1}</Text></View><View style={[styles.portrait,index===0&&styles.winnerPortrait,styles.emptyPortrait]}/><View style={styles.caption}><Text style={styles.name}>Pendiente</Text><Text style={styles.detail}>Jugador no registrado</Text></View><View style={[styles.scorePanel,{borderColor:metal}]}><Text style={styles.scoreLabel}>ONCEX SCORE</Text><Text style={[styles.score,{color:metal}]}>—</Text></View></View></View>;
-   return <Pressable key={player.player_id} accessibilityRole="button" disabled={!canOpenProfiles} onPress={()=>open(player.player_id)} style={[styles.podiumCard,{borderColor:metal},index===0&&styles.winner]}>
-    <LinearGradient colors={shades} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.cardInner}>
-     {index===0 && <Text style={styles.crown}>♛</Text>}<View style={[styles.medal,{borderColor:metal}]}><Text style={[styles.medalNumber,{color:metal}]}>{player.rank}</Text></View>
+   if(!player) return <View key={`empty-${index}`} style={[styles.podiumCard,{borderColor:metal},index===0&&styles.winner]}><View style={[styles.medal,{borderColor:metal}]}><Text style={[styles.medalNumber,{color:metal}]}>{index+1}</Text></View><View style={[styles.cardInner,index===0&&styles.emptyCardInner]}>{index===0 && <Text style={styles.crown}>♛</Text>}<View style={[styles.portrait,index===0&&styles.winnerPortrait,styles.emptyPortrait]}/><View style={styles.caption}><Text style={styles.name}>Pendiente</Text><Text style={styles.detail}>Jugador no registrado</Text></View><View style={[styles.scorePanel,{borderColor:metal}]}><Text style={styles.scoreLabel}>ONCEX SCORE</Text><Text style={[styles.score,{color:metal}]}>—</Text></View></View></View>;
+return <Pressable key={player.player_id} accessibilityRole="button" disabled={!canOpenProfiles} onPress={()=>open(player.player_id)} style={[styles.podiumCard,{borderColor:metal},index===0&&styles.winner]}>
+ <View style={[styles.medal,{borderColor:metal}]}><Text style={[styles.medalNumber,{color:metal}]}>{player.rank}</Text></View>
+ <LinearGradient colors={shades} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.cardInner}>
+     {index===0 && <Text style={styles.crown}>♛</Text>}
      <ProfilePortrait key={player.photo_url} url={player.photo_url} name={player.full_name} style={[styles.portrait,index===0&&styles.winnerPortrait]}/>
      <LinearGradient colors={['transparent','#080B10']} style={styles.caption}><Text numberOfLines={2} style={styles.name}>{player.full_name}</Text><Text numberOfLines={1} style={styles.detail}>{player.team_name}</Text><Text numberOfLines={1} style={styles.detail}>{player.player_position||'Sin posición'}</Text></LinearGradient>
      <View style={[styles.scorePanel,{borderColor:metal}]}><Text style={styles.scoreLabel}>ONCEX SCORE</Text><Text style={[styles.score,{color:metal}]}>{player.oncex_score??'—'}</Text></View>
