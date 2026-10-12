@@ -37,7 +37,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(37, 10, 16, 0.96)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 70, 82, 0.2)'
   },
   back: {
     width: 44,
