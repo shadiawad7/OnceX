@@ -1,3 +1,4 @@
+import PlayerNavigation from './PlayerNavigation';
 import { useState } from 'react';
 import { StyleSheet, Text, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,8 +25,8 @@ export default function AccountShell({ children, allowed, fallback = '/home' }: 
  }
  const { account, error, retry } = useAccountAccess();
  if (account && allowed && !allowed.includes(account.primaryRole)) return <Redirect href="/home" />;
- return <SafeAreaView style={styles.safe}><ScreenHeader fallback={fallback} logoStyle={styles.logo} />
-  {!account ? <AccountPending error={error} retry={retry} /> : <><View style={styles.top}><Text style={styles.badge}>{roleLabels[account.primaryRole]}</Text><Pressable accessibilityRole="button" accessibilityState={{disabled:signingOut,busy:signingOut}} disabled={signingOut} onPress={()=> {void signOut();}}><Text style={styles.logout}>{signingOut?'Cerrando sesión…':'Cerrar sesión'}</Text></Pressable></View>{!!logoutError && <Text accessibilityRole="alert" style={{color:colors.redBright,marginHorizontal:20}}>{logoutError}</Text>}{children(account)}</>}
+ return <SafeAreaView style={styles.safe} edges={account?.primaryRole==='player' ? ['top','left','right'] : ['top','left','right','bottom']}><ScreenHeader fallback={fallback} logoStyle={styles.logo} />
+  {!account ? <AccountPending error={error} retry={retry} /> : <><View style={styles.top}><Text style={styles.badge}>{roleLabels[account.primaryRole]}</Text><Pressable accessibilityRole="button" accessibilityState={{disabled:signingOut,busy:signingOut}} disabled={signingOut} onPress={()=> {void signOut();}}><Text style={styles.logout}>{signingOut?'Cerrando sesión…':'Cerrar sesión'}</Text></Pressable></View>{!!logoutError && <Text accessibilityRole="alert" style={{color:colors.redBright,marginHorizontal:20}}>{logoutError}</Text>}<View style={{flex:1}}>{children(account)}</View>{account.primaryRole==='player'&&<PlayerNavigation/>}</>}
  </SafeAreaView>;
 }
 const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: '#250A10' }, logo: { width: 140, height: 65 }, top: { flexDirection: 'row', justifyContent: 'space-between', margin: 20, marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: 'rgba(20, 8, 13, 0.58)', borderWidth: 1, borderColor: 'rgba(255, 70, 82, 0.22)' }, badge: { color: colors.redBright, fontSize: 10, fontWeight: '800', letterSpacing: 1 }, logout: { color: '#D7B7BC', fontSize: 12 } });

@@ -47,7 +47,6 @@ export default function PlayerRankings({ clubId, canOpenProfiles }: { clubId?: s
  const choices=field ? [...new Set(rows.map(row=>row[field]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(value=>({value,label:field==='team_id' ? rows.find(row=>row.team_id===value)!.team_name : value})) : [];
  const players=rankPlayers(rows,field,filter);
  const podium=players.slice(0,3);
- const podiumIds=new Set(podium.map(player=>player.player_id));
  const tablePlayers=players;
  function open(id:string) {if(canOpenProfiles) router.push({pathname:'/players/[id]',params:{id}});}
  const header=<>
