@@ -1,2 +1,3 @@
-import RoleTeamsDashboard from '../../components/RoleTeamsDashboard';
-export default function PlayerTeams() { return <RoleTeamsDashboard role="player" title="Mis equipos" description="Consulta tus equipos y entrenadores."/>; }
+import AccountShell from '../../components/AccountShell';
+import PlayerTeamCards from '../../components/PlayerTeamCards';
+export default function PlayerTeams() {return <AccountShell allowed={['player']} fallback="/login">{()=> <PlayerTeamCards/>}</AccountShell>;}

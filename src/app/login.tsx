@@ -118,7 +118,7 @@ export default function Login() {
         importantForAccessibility={contentReady ? 'auto' : 'no-hide-descendants'}
       >
         <SafeAreaView style={styles.safe}>
-          <ScreenHeader fallback="/" logoStyle={styles.logo} />
+          <ScreenHeader transparent hideBack logoStyle={styles.logo} />
           <ScrollView
             bounces={false}
             overScrollMode="never"
@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   },
   loginIntro: { flex: 1, minHeight: 100, alignItems: 'center' },
   eyebrow: {
+    marginTop: 12,
     color: colors.white,
     fontSize: 9,
     fontWeight: '800',

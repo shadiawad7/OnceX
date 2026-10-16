@@ -1,3 +1,4 @@
+import BlendedCardBackground from './BlendedCardBackground';
 import { router } from 'expo-router';
 import { listPages } from '../lib/listPages';
 import { useEffect, useRef, useState } from 'react';
@@ -129,8 +130,8 @@ export default function AdminManager({ section }: { section: AdminSection }) {
   <Text style={styles.body}>{count} registros</Text>
  </View>;
  return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><FlatList ref={listRef} data={loading ? [] : rows} keyExtractor={item => String(item.id)} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" ListHeaderComponent={header} ListEmptyComponent={!loading && !error ? <Text style={styles.body}>No hay registros.</Text> : null} renderItem={({ item }) => section === 'activity'
-  ? <View style={styles.card}><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
-  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text><Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
+  ? <View style={styles.card}><BlendedCardBackground /><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
+  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><BlendedCardBackground /><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text><Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
   /></KeyboardAvoidingView>;
 }
 const styles = StyleSheet.create({
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
  title: { color: colors.white, fontSize: 28, fontWeight: '800' }, subtitle: { color: colors.white, fontSize: 20, fontWeight: '800' },
  body: { color: colors.muted, lineHeight: 21, marginVertical: 8 },
  input: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, padding: 14, borderRadius: 10, color: colors.white, marginVertical: 6 },
- card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 16, marginTop: 12 },
+ card: { backgroundColor: 'transparent', borderColor: colors.border, borderWidth: 0, borderRadius: 18, padding: 16, marginTop: 12 },
  playerMeta: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 6 },
  label: { color: colors.white, fontWeight: '700', fontSize: 16 }, form: { marginVertical: 20 },
  message: { color: colors.white, lineHeight: 22, marginVertical: 14 }, loader: { margin: 20 },

@@ -1,3 +1,4 @@
+import ScreenBackground from '../components/ScreenBackground';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,13 +11,13 @@ import { roleLabels } from '../lib/access';
 import Button from '../components/Button';
 export default function Roles() {
   const { account, error, retry } = useAccountAccess();
-  if (!account) return <SafeAreaView style={styles.safe}><ScreenHeader fallback="/login" logoStyle={styles.logo} /><AccountPending error={error} retry={retry} /></SafeAreaView>;
-  return <SafeAreaView style={styles.safe}><ScreenHeader fallback="/login" logoStyle={styles.logo} /><ScrollView bounces={false} overScrollMode="never" contentContainerStyle={styles.roles}><View style={styles.sectionTop}><Text style={styles.eyebrow}>TU CUENTA</Text><Text style={styles.heading}>Tus roles</Text><Text style={styles.body}>Estos permisos los asigna la administración. No se pueden elegir durante el registro.</Text></View>{account.memberships.map((membership, index) => <View key={`${membership.role_code}-${membership.club_id ?? index}`} style={styles.roleCard}><View style={styles.roleCopy}><Text style={styles.roleLabel}>{roleLabels[membership.role_code]}</Text><Text style={styles.roleDescription}>{membership.club_id ? 'Acceso limitado al club asignado' : membership.role_code === 'super_admin' ? 'Acceso a toda la plataforma' : 'Cuenta personal'}</Text></View></View>)}<Button label="ENTRAR" onPress={() => router.replace('/home')} /></ScrollView><StatusBar style="light" /></SafeAreaView>;
+  if (!account) return <ScreenBackground><SafeAreaView style={styles.safe}><ScreenHeader fallback="/login" logoStyle={styles.logo} /><AccountPending error={error} retry={retry} /></SafeAreaView></ScreenBackground>;
+  return <ScreenBackground><SafeAreaView style={styles.safe}><ScreenHeader fallback="/login" logoStyle={styles.logo} /><ScrollView bounces={false} overScrollMode="never" contentContainerStyle={styles.roles}><View style={styles.sectionTop}><Text style={styles.eyebrow}>TU CUENTA</Text><Text style={styles.heading}>Tus roles</Text><Text style={styles.body}>Estos permisos los asigna la administración. No se pueden elegir durante el registro.</Text></View>{account.memberships.map((membership, index) => <View key={`${membership.role_code}-${membership.club_id ?? index}`} style={styles.roleCard}><View style={styles.roleCopy}><Text style={styles.roleLabel}>{roleLabels[membership.role_code]}</Text><Text style={styles.roleDescription}>{membership.club_id ? 'Acceso limitado al club asignado' : membership.role_code === 'super_admin' ? 'Acceso a toda la plataforma' : 'Cuenta personal'}</Text></View></View>)}<Button label="ENTRAR" onPress={() => router.replace('/home')} /></ScrollView><StatusBar style="light" /></SafeAreaView></ScreenBackground>;
 }
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: 'transparent'
   },
   roles: {
     padding: 26,

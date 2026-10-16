@@ -3,6 +3,7 @@ import { ImageBackground, KeyboardAvoidingView, Platform, ScrollView, StyleSheet
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import ScreenHeader from '../components/ScreenHeader';
+import { SCREEN_BACKGROUND_BLUR } from '../components/ScreenBackground';
 import Button from '../components/Button';
 import { colors } from '../theme/colors';
 import { supabase } from '../lib/supabase';
@@ -40,7 +41,7 @@ export default function Register() {
   };
 
   return (
-    <ImageBackground source={require('../../assets/login-stadium.png')} resizeMode="cover" style={styles.background}>
+    <ImageBackground source={require('../../assets/bg_resto.png')} resizeMode="cover" blurRadius={SCREEN_BACKGROUND_BLUR} style={styles.background}>
       <SafeAreaView style={styles.safe}>
         <ScreenHeader fallback="/login" logoStyle={styles.logo} />
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

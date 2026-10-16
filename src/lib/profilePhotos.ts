@@ -2,8 +2,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { client } from './hierarchy';
 export type ProfilePhoto = { uri: string; base64: string; contentType: string };
-export async function chooseProfilePhoto(): Promise<ProfilePhoto | null> {
- const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[3,4],quality:0.65,base64:true});
+export async function chooseProfilePhoto(aspect: [number,number] = [3,4], allowsEditing = true): Promise<ProfilePhoto | null> {
+ const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing,aspect,quality:allowsEditing?0.65:1,base64:true});
  if(result.canceled) return null;
  const asset=result.assets[0];
  if(!asset.base64) throw new Error('No se ha podido leer la foto. Selecciona otra imagen.');

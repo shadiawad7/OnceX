@@ -149,3 +149,75 @@ la asignación al equipo. Actualmente el dorsal se guarda en el perfil general.
 La ficha no muestra el formulario de edición a una cuenta de jugador.
 La prueba `supabase/tests/player_registration.sql` comprueba que el entrenador
 puede guardar el dorsal y que el jugador no modifica su ficha ni su foto.
+
+### Altas por entrenadores y superadministradores
+
+Ejecuta `supabase/migrations/202610120001_coach_account_creation.sql` tras las
+migraciones anteriores. El entrenador puede crear jugadores y otros entrenadores
+únicamente en los equipos donde está asignado. El superadmin puede hacerlo en
+cualquier equipo. No requiere desplegar otra vez la función de altas.
+
+Dentro del equipo, cada pestaña tiene su botón: «CREAR ENTRENADOR» o «CREAR
+JUGADOR». Al crear un jugador desde el equipo, el superadmin selecciona un
+entrenador de ese equipo; para un entrenador, se asigna a su propia cuenta.
+Si el equipo aún no tiene entrenador, primero hay que crear uno. Al crear desde
+la ficha del entrenador, la asignación ya viene indicada.
+
+`supabase/tests/coach_account_creation.sql` comprueba estas capacidades y el
+bloqueo de otros equipos y de cuentas de jugador.
+
+### Fotos de clubes y tarjetas de equipos
+
+Ejecuta `supabase/migrations/202610120002_club_photos.sql` después de las
+migraciones anteriores. Crea `clubs.photo_path`, el bucket privado `club-photos`
+y los permisos de lectura y escritura. No requiere desplegar la Edge Function.
+
+El alta de club permite añadir una foto opcional JPG/PNG/WebP de hasta 5 MB.
+La subida ocurre después de crear la cuenta; un fallo se puede reintentar sin
+crear otro club. El superadmin también puede subir una foto a un club existente
+desde «Editar club». El bucket permite gestionar fotos al superadmin y al
+administrador del club; sus miembros solo pueden leerlas con URL firmada.
+
+La pestaña Equipos del jugador muestra tarjetas con foto del club, nombre del
+club y equipo, categoría y acceso a plantilla/entrenadores. Al pulsarlas cambian
+ligeramente de escala. Sin foto se muestra un campo de fútbol dibujado con código.
+Los datos proceden de los equipos visibles por RLS; se cargan todas las páginas.
+Las pruebas locales de Storage usan tablas simuladas; la subida desde el móvil
+requiere aplicar la migración al proyecto Supabase.
+
+### Plan BASIC/PRO por equipo y diagnóstico de fotos
+
+Ejecuta `202610120002_club_photos.sql` si aún falta `clubs.photo_path`, y después
+`supabase/migrations/202610120003_team_plans.sql`. Los equipos existentes empiezan
+con BASIC. El alta y «Editar equipo» permiten asignar BASIC o PRO al superadmin
+y al administrador del club. Los entrenadores ven el plan pero no lo cambian.
+Las tarjetas de Equipos muestran el plan asignado. La asignación no ejecuta
+cobros ni cambia automáticamente las prestaciones: queda preparada para que
+cada función consulte el plan del equipo.
+
+La foto del club ahora comprueba la columna antes de subir y muestra el error
+concreto de Storage o de la vinculación. Si falta la migración, indica el archivo
+que hay que ejecutar. Los antiguos planes del club se conservan en la base,
+pero su selector se ha retirado de «Editar club» porque el plan se asigna al equipo.
+
+### Pestaña Plan y acceso heredado (PDF BASIC/PRO)
+
+Ejecuta `supabase/migrations/202610140001_team_plan_access.sql` después de la
+migración de planes por equipo. Dentro del equipo, junto a Entrenadores y
+Jugadores, la pestaña Plan muestra las prestaciones y permite asignar BASIC/PRO
+al superadmin o administrador del club. El plan sigue siendo una propiedad del
+equipo, no un rol de seguridad ni una configuración duplicada en cada jugador.
+
+El ranking BASIC se limita a equipos donde el jugador pertenece. PRO habilita
+los filtros globales del club, posición y categoría. La función SQL comprueba
+el plan y la pertenencia también en la API. Un cambio del plan se refleja en
+todos los jugadores al volver a abrir o enfocar sus pantallas. Si el jugador
+pertenece a varios equipos en el mismo club, basta que uno sea PRO para el
+ranking global de ese club. El personal autorizado conserva su acceso operativo.
+
+La ficha BASIC muestra el seguimiento básico; la evolución avanzada se muestra
+con PRO. Las estadísticas de partidos, el registro por voz, los insights y la
+fórmula de Score avanzada todavía requieren implementar la gestión de partidos:
+la asignación del plan no genera estadísticas o evaluaciones ficticias.
+`supabase/tests/team_plan_access.sql` comprueba la herencia, la restricción BASIC
+y la revocación del ranking global al bajar de PRO a BASIC.

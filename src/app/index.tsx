@@ -1,3 +1,4 @@
+import ScreenBackground from '../components/ScreenBackground';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,16 +13,16 @@ export default function Splash() {
     manual?: string;
   }>();
   if (manual !== '1') return <Redirect href="/login" />;
-  return <SafeAreaView style={styles.safe}><ScreenHeader root /><View style={styles.splash}><View style={styles.splashGlow} /><Brand style={styles.logo} /><Text style={styles.splashTag}>FÚTBOL · EVOLUCIÓN · RENDIMIENTO</Text><View style={styles.splashLine} /><Text style={styles.splashFoot}>THE PERFORMANCE PLATFORM</Text><Button label="CONTINUAR" onPress={() => router.push('/login')} /></View></SafeAreaView>;
+  return <ScreenBackground><SafeAreaView style={styles.safe}><ScreenHeader root transparent /><View style={styles.splash}><View style={styles.splashGlow} /><Brand style={styles.logo} /><Text style={styles.splashTag}>FÚTBOL · EVOLUCIÓN · RENDIMIENTO</Text><View style={styles.splashLine} /><Text style={styles.splashFoot}>THE PERFORMANCE PLATFORM</Text><Button label="CONTINUAR" onPress={() => router.push('/login')} /></View></SafeAreaView></ScreenBackground>;
 }
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: 'transparent'
   },
   splash: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 28
