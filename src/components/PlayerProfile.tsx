@@ -1,4 +1,3 @@
-import IconCircleStripes from './IconCircleStripes';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PlayerStatsPanel from './PlayerStatsPanel';
@@ -72,7 +71,7 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
 function Rank({ label, value, subtitle, icon, color = '#FFFFFF' }: { label: string; value: string; subtitle?: string; color?: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }) {
  return <View style={styles.rank}>
   <LinearGradient pointerEvents="none" colors={['rgba(103, 19, 34, 0.68)', 'rgba(12, 5, 9, 0.4)', 'rgba(12, 5, 9, 0)']} style={styles.rankWash} />
-  <View style={[styles.rankIcon, { borderColor: playerColorWithOpacity(color, playerIconBorderOpacityPercent) }]}><IconCircleStripes color={color} /><MaterialCommunityIcons style={styles.foregroundIcon} name={icon} size={23} color={playerColorWithOpacity(color, playerIconOpacityPercent)} /></View>
+  <View style={[styles.rankIcon, { borderColor: playerColorWithOpacity(color, playerIconBorderOpacityPercent) }]}><MaterialCommunityIcons style={styles.foregroundIcon} name={icon} size={23} color={playerColorWithOpacity(color, playerIconOpacityPercent)} /></View>
   <Text style={styles.rankLabel}>{label}</Text><Text style={styles.rankValue}>{value}</Text>
   {!!subtitle && <Text style={styles.detailSubtitle}>{subtitle}</Text>}
  </View>;

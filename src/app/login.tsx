@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, ImageBackground, ScrollView, StyleSheet, Text, TextInput, View, useAnimatedValue, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Animated, ImageBackground, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -36,18 +36,33 @@ export default function Login() {
     } catch { setAuthError(authErrorMessage({})); }
     finally { setSigningIn(false); }
   };
-  const logoOpacity = useAnimatedValue(0);
-  const logoScale = useAnimatedValue(0.03);
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const introLogoWidth = Math.min(screenWidth * 0.8, screenHeight * 1.2, 420);
-  const backgroundOpacity = useAnimatedValue(skipIntro ? 1 : 0);
-  const contentOpacity = useAnimatedValue(skipIntro ? 1 : 0);
-  const contentOffset = useAnimatedValue(skipIntro ? 0 : 18);
+const [logoOpacity] = useState(() => new Animated.Value(0));
+const [logoScale] = useState(() => new Animated.Value(0.03));
+
+const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+const introLogoWidth = Math.min(screenWidth * 0.8, screenHeight * 1.2, 420);
+
+const [backgroundOpacity] = useState(() => new Animated.Value(skipIntro ? 1 : 0));
+
+const [contentOpacity] = useState(() => new Animated.Value(skipIntro ? 1 : 0));
+
+const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
   const [logoExpanded, setLogoExpanded] = useState(false);
   const [backgroundReady, setBackgroundReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(skipIntro ? true : null);
   const [introFinished, setIntroFinished] = useState(skipIntro);
   const contentReady = introFinished || reduceMotion === true;
+
+  // Always restore the logo, stadium and form if an interrupted intro gets stuck.
+  useEffect(() => {
+    if (contentReady) return;
+    const timeout = setTimeout(() => {
+      setReduceMotion(true);
+      setIntroFinished(true);
+    }, 6000);
+    return () => clearTimeout(timeout);
+  }, [contentReady]);
+
 
   useEffect(() => {
     if (skipIntro) return;

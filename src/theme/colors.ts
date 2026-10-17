@@ -44,3 +44,7 @@ export const podiumBronzeColorPercent = 100;
 
 // Opacidad de la sombra negra exterior de las cartas: 0 = oculta; 100 = máximo.
 export const podiumShadowOpacityPercent = 100;
+
+// Mezcla de las fotos del top 3 con la carta (porcentajes de 0 a 100).
+export const podiumPhotoBlendHeightPercent = 5; // Altura desde la base de la foto.
+export const podiumPhotoBlendOpacityPercent = 100; // Intensidad del efecto.

@@ -1,4 +1,3 @@
-import IconCircleStripes from './IconCircleStripes';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
@@ -20,7 +19,7 @@ export default function PlayerStatsPanel() {
     {stats.map(stat => <View key={stat.code} style={styles.metric} accessible accessibilityLabel={`${stat.label}: sin datos`}>
       <LinearGradient pointerEvents="none" colors={['rgba(108, 20, 33, 0.7)', 'rgba(20, 6, 10, 0.5)', 'rgba(20, 6, 10, 0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wash} />
       <View style={styles.row}>
-        <View style={[styles.medallion, { borderColor: playerColorWithOpacity(stat.color, playerIconBorderOpacityPercent) }]}><IconCircleStripes color={stat.color} /><MaterialCommunityIcons style={styles.foregroundIcon} name={stat.icon} size={22} color={playerColorWithOpacity(stat.color, playerIconOpacityPercent)} /></View>
+        <View style={[styles.medallion, { borderColor: playerColorWithOpacity(stat.color, playerIconBorderOpacityPercent) }]}><MaterialCommunityIcons style={styles.foregroundIcon} name={stat.icon} size={22} color={playerColorWithOpacity(stat.color, playerIconOpacityPercent)} /></View>
         <Text style={styles.value}>—</Text>
       </View>
       <Text style={styles.label}>{stat.label}</Text>
