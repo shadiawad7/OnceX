@@ -6,7 +6,7 @@ export const adminSections = {
  teams: { title: 'Equipos', table: 'teams', columns: 'id,name,category,club_id,clubs(name)', order: 'name' },
  players: { title: 'Jugadores', table: 'profiles', columns: 'id,full_name,position,user_roles!inner(id,role_code,club_id,clubs(name))', order: 'full_name' },
  coaches: { title: 'Entrenadores', table: 'profiles', columns: 'id,full_name,user_roles!inner(id,role_code,club_id,clubs(name))', order: 'full_name' },
- users: { title: 'Usuarios y roles', table: 'profiles', columns: 'id,full_name,user_roles(id,role_code,club_id,clubs(name))', order: 'full_name' },
+ users: { title: 'Usuarios', table: 'profiles', columns: 'id,full_name,user_roles(id,role_code,club_id,clubs(name))', order: 'full_name' },
  plans: { title: 'Planes', table: 'plans', columns: 'id,name,description,monthly_price_cents,active', order: 'name' },
  activity: { title: 'Actividad general', table: 'activity_log', columns: 'id,entity,action,created_at,profiles(full_name)', order: 'id' },
 } as const;

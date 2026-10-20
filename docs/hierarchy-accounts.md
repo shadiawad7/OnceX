@@ -221,3 +221,27 @@ fórmula de Score avanzada todavía requieren implementar la gestión de partido
 la asignación del plan no genera estadísticas o evaluaciones ficticias.
 `supabase/tests/team_plan_access.sql` comprueba la herencia, la restricción BASIC
 y la revocación del ranking global al bajar de PRO a BASIC.
+
+
+## Panel unificado del superadmin (17/10/2026)
+
+El panel muestra solo Usuarios y Planes. Usuarios abre la estructura Clubes → Equipos → Entrenadores → Jugadores, manteniendo las fotos, las altas y la edición existentes. Planes muestra el catálogo BASIC/PRO de equipos; la asignación continúa en el equipo, pestaña Plan. Este catálogo no usa las antiguas suscripciones por club ni añade cobros.
+
+Para activar la eliminación, ejecutar `supabase/migrations/202610170001_admin_hierarchy_delete.sql` en el SQL Editor de Supabase. No requiere volver a desplegar create-account.
+
+Solo un superadmin puede eliminar. Hay que escribir ELIMINAR en cada confirmación. Los clubes deben estar sin equipos; los equipos, sin miembros; los entrenadores, sin jugadores asignados. Eliminar un entrenador o jugador elimina su cuenta Auth y su ficha en todos sus equipos; no permite eliminar cuentas administrativas ni la propia cuenta. Eliminar un club retira sus asignaciones de roles y suscripción, pero no elimina las cuentas Auth de administradores de club. Las fotos almacenadas no se borran automáticamente. Si Supabase bloquea la eliminación porque la cuenta es propietaria de objetos Storage, hay que eliminar o reasignar esos objetos mediante la API de Storage antes de reintentar (nunca borrar metadatos Storage mediante SQL).
+
+Validación local: lint, TypeScript y `supabase/tests/admin_hierarchy_delete.sql`, con migraciones 001–003 y la nueva migración en una base temporal. Incluye rechazo de entrenador sin permiso, protección de la propia cuenta, contenedores no vacíos y eliminación completa de la jerarquía de prueba. No se han eliminado datos reales ni aplicado la migración remota.
+
+
+## Cambios de plan al renovar (18/10/2026)
+
+Los entrenadores asignados y los administradores pueden programar BASIC/PRO desde Equipo → Plan. La confirmación muestra plan actual, nuevo plan, prestaciones, fecha y tarifas del PDF (BASIC 1,49 €/jugador/mes; PRO 2,99 €/jugador/mes). No hay pasarela ni cargos automáticos. Los planes personalizados del catálogo todavía no configuran permisos de equipos.
+
+Aplicar `202610180002_scheduled_team_plans.sql` después de las migraciones existentes. Esta migración sustituye el cambio inmediato, incluso si se ejecutó `202610180001_coach_team_plans.sql`; no es necesario ejecutar 001 para instalar 002. Activar Supabase Cron (pg_cron) en Integrations y ejecutar `202610180003_team_plan_cron.sql`. El job renueva cada minuto, también sin la app abierta. `get_team_plan` también materializa una renovación vencida. `viewer_club_plan` aplica las prestaciones efectivas en la fecha exacta aunque el job todavía no se haya ejecutado.
+
+Cada periodo dura un mes natural desde la activación, conservando el aniversario en los meses cortos (31/enero → 28/febrero → 31/marzo). Como no había fecha de activación anterior almacenada, los equipos existentes comienzan su primer periodo registrado al ejecutar 002, sin inventar pagos históricos. Los nuevos equipos lo empiezan al crearse. Al renovar con un cambio pendiente, la nueva activación es el vencimiento anterior.
+
+La programación no cambia `plan_code` hasta el vencimiento. Se puede cancelar o reemplazar una solicitud pendiente. La confirmación incluye el plan y vencimiento esperados; si cambiaron, se rechaza y hay que volver a consultar. Los clientes no pueden modificar directamente los campos de periodo o plan, ni siquiera desde Editar equipo. Las funciones comprueban al entrenador del equipo exacto, los jugadores solo consultan su propio equipo, y el job privado no es ejecutable por authenticated/anon.
+
+Verificación: `supabase/tests/scheduled_team_plans.sql` prueba permisos, confirmación obligatoria, datos obsoletos, protección de campos, cancelación, continuidad BASIC antes de vencer, activación PRO después y aniversario en meses cortos. Ejecutado en PostgreSQL local temporal con fixtures revertidos. El job Cron debe activarse en Supabase; no ha sido instalado remotamente.

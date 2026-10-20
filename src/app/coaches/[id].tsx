@@ -1,3 +1,4 @@
+import DeleteHierarchyButton from '../../components/DeleteHierarchyButton';
 import ProfilePhotoDisplay from '../../components/ProfilePhotoDisplay';
 import { useCallback, useState } from 'react';
 import { Text, Pressable, View, StyleSheet } from 'react-native';
@@ -32,6 +33,6 @@ function CoachPlayers({ id, teamId, account }: { id: string; teamId: string; acc
  }, [id,teamId,account.primaryRole,account.userId]));
  const load = useCallback((page: number, search: string) => listTeamPeople(teamId,['player'],page,search,id), [teamId,id]);
  if (error) return <Text style={styles.error}>{error}</Text>;
- return <HierarchyList header={<View><ProfilePhotoDisplay id={id} name={coach?.name??'Entrenador'}/>{editAllowed&&<Pressable accessibilityRole="button" style={{paddingVertical:14}} onPress={()=>router.push({pathname:'/coaches/edit/[id]',params:{id,teamId}})}><Text style={{color:colors.redBright,fontWeight:'800'}}>EDITAR NOMBRE →</Text></Pressable>}</View>} title={coach?.name ?? 'Entrenador'} description="Jugadores de este entrenador" load={load} empty="Este entrenador todavía no tiene jugadores asignados." onSelect={item => router.push({ pathname: '/players/[id]', params: { id: item.id } })} onCreate={allowed && coach ? () => router.push({ pathname: '/create-account', params: { kind: 'player', clubId: coach.clubId, teamId, coachId: id } }) : undefined} createLabel="CREAR JUGADOR" />;
+ return <HierarchyList sporty header={<View>{account.primaryRole==='super_admin'&&<DeleteHierarchyButton kind="coach" id={id} fallback={{pathname:'/teams/[id]',params:{id:teamId}}}/>}<ProfilePhotoDisplay id={id} name={coach?.name??'Entrenador'}/>{editAllowed&&<Pressable accessibilityRole="button" style={{paddingVertical:14}} onPress={()=>router.push({pathname:'/coaches/edit/[id]',params:{id,teamId}})}><Text style={{color:colors.redBright,fontWeight:'800'}}>EDITAR NOMBRE →</Text></Pressable>}</View>} title={coach?.name ?? 'Entrenador'} description="Jugadores de este entrenador" load={load} empty="Este entrenador todavía no tiene jugadores asignados." onSelect={item => router.push({ pathname: '/players/[id]', params: { id: item.id } })} onCreate={allowed && coach ? () => router.push({ pathname: '/create-account', params: { kind: 'player', clubId: coach.clubId, teamId, coachId: id } }) : undefined} createLabel="CREAR JUGADOR" />;
 }
 const styles = StyleSheet.create({ error: { color: colors.white, padding: 22, lineHeight: 22 } });

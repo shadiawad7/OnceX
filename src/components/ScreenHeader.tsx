@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { router, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, type ImageStyle, type StyleProp } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ImageStyle, type StyleProp, useWindowDimensions } from 'react-native';
 import Brand from './Brand';
 import { colors } from '../theme/colors';
 type Props = {
@@ -19,6 +19,12 @@ export default function ScreenHeader({
   logoStyle,
   rightAction
 }: Props) {
+  const { width } = useWindowDimensions();
+  const requestedLogo = StyleSheet.flatten(logoStyle);
+  const requestedWidth = typeof requestedLogo?.width === 'number' ? requestedLogo.width : 200;
+  const requestedHeight = typeof requestedLogo?.height === 'number' ? requestedLogo.height : 80;
+  const logoWidth = Math.min(requestedWidth, Math.max(48, width - 32 - (rightAction ? 184 : 88)));
+  const logoHeight = requestedHeight * logoWidth / requestedWidth;
   const goBack = () => {
     if (router.canGoBack()) router.back();else if (fallback === '/') router.replace({
       pathname: '/',
@@ -35,12 +41,14 @@ export default function ScreenHeader({
     }) => [styles.back, root && styles.disabled, pressed && styles.pressed]}>
         <Text style={styles.arrow}>←</Text>
       </Pressable>}</View>
-      {!root && <Brand style={logoStyle} />}
+      {!root && <View style={styles.logoSlot}><Brand style={[logoStyle,{width:logoWidth,height:logoHeight,marginVertical:0}]} /></View>}
       {rightAction ? <View style={[styles.actionSide,styles.actionRight]}>{rightAction}</View> : <View style={styles.spacer} />}
     </View>;
 }
 const styles = StyleSheet.create({
+  logoSlot: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center' },
   header: {
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -51,7 +59,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 70, 82, 0.2)'
   },
   transparent: { backgroundColor: 'transparent', borderBottomWidth: 0 },
-  actionSide: { width: 92, justifyContent: 'center' },
+  actionSide: { width: 92, flexShrink: 0, justifyContent: 'center' },
   actionRight: { alignItems: 'flex-end' },
   back: {
     width: 44,
@@ -64,6 +72,7 @@ const styles = StyleSheet.create({
     color: colors.white
   },
   spacer: {
+    flexShrink: 0,
     width: 44
   },
   disabled: {

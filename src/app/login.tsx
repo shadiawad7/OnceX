@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, ImageBackground, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Image, ImageBackground, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '../theme/colors';
 import ScreenHeader from '../components/ScreenHeader';
 import Button from '../components/Button';
-import Brand from '../components/Brand';
+import DrawnLogo from '../components/DrawnLogo';
 import { supabase } from '../lib/supabase';
 import { authErrorMessage } from '../lib/auth';
 
@@ -37,7 +37,9 @@ export default function Login() {
     finally { setSigningIn(false); }
   };
 const [logoOpacity] = useState(() => new Animated.Value(0));
-const [logoScale] = useState(() => new Animated.Value(0.03));
+const [drawProgress] = useState(() => new Animated.Value(0));
+const [outlineOpacity] = useState(() => new Animated.Value(1));
+const [originalLogoOpacity] = useState(() => new Animated.Value(0));
 
 const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 const introLogoWidth = Math.min(screenWidth * 0.8, screenHeight * 1.2, 420);
@@ -48,6 +50,7 @@ const [contentOpacity] = useState(() => new Animated.Value(skipIntro ? 1 : 0));
 
 const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
   const [logoExpanded, setLogoExpanded] = useState(false);
+  const [originalLogoReady, setOriginalLogoReady] = useState(false);
   const [backgroundReady, setBackgroundReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(skipIntro ? true : null);
   const [introFinished, setIntroFinished] = useState(skipIntro);
@@ -59,7 +62,7 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
     const timeout = setTimeout(() => {
       setReduceMotion(true);
       setIntroFinished(true);
-    }, 6000);
+    }, 7500);
     return () => clearTimeout(timeout);
   }, [contentReady]);
 
@@ -82,26 +85,32 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
       return;
     }
 
-    // Keep the centered logo visible while the stadium image loads.
-    const logoEntrance = Animated.parallel([
-      Animated.timing(logoOpacity, { toValue: 1, duration: 900, useNativeDriver: true }),
-      Animated.timing(logoScale, { toValue: 1, duration: 2600, useNativeDriver: true }),
+    if (!originalLogoReady) return;
+    // Keep the complete outline visible until the original artwork has filled it.
+    const logoEntrance = Animated.sequence([
+      Animated.parallel([
+        Animated.timing(logoOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(drawProgress, { toValue: 1, duration: 1750, easing: Easing.linear, useNativeDriver: false }),
+      ]),
+      Animated.timing(originalLogoOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(outlineOpacity, { toValue: 0, duration: 100, useNativeDriver: true }),
+      Animated.delay(600),
     ]);
     logoEntrance.start(({ finished }) => { if (finished) setLogoExpanded(true); });
     return () => logoEntrance.stop();
-  }, [reduceMotion, logoOpacity, logoScale, backgroundOpacity, contentOpacity, contentOffset]);
+  }, [reduceMotion, originalLogoReady, logoOpacity, drawProgress, outlineOpacity, originalLogoOpacity, backgroundOpacity, contentOpacity, contentOffset]);
 
   useEffect(() => {
     if (!backgroundReady || !logoExpanded || reduceMotion !== false) return;
     const entrance = Animated.sequence([
-      Animated.delay(350),
+      Animated.delay(150),
       Animated.parallel([
-        Animated.timing(backgroundOpacity, { toValue: 1, duration: 650, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+        Animated.timing(backgroundOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
       ]),
       Animated.parallel([
-        Animated.timing(contentOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.timing(contentOffset, { toValue: 0, duration: 450, useNativeDriver: true }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(contentOffset, { toValue: 0, duration: 300, useNativeDriver: true }),
       ]),
     ]);
     entrance.start(({ finished }) => { if (finished) setIntroFinished(true); });
@@ -122,8 +131,11 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
         </ImageBackground>
       </Animated.View>
       {!contentReady && (
-        <Animated.View pointerEvents="none" style={[styles.introLogo, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
-          <Brand style={[styles.logo, { width: introLogoWidth, height: introLogoWidth / 2 }]} />
+        <Animated.View pointerEvents="none" style={[styles.introLogo, { opacity: logoOpacity }]}>
+          <View style={{width:introLogoWidth,height:introLogoWidth*887/1786}}>
+            <Animated.View style={[styles.logoLayer,{opacity:outlineOpacity}]}><DrawnLogo progress={drawProgress} width={introLogoWidth} height={introLogoWidth*887/1786}/></Animated.View>
+            <Animated.View style={[styles.logoLayer,{opacity:originalLogoOpacity}]}><Image source={require('../../assets/oncex-logo.png')} resizeMode="contain" accessibilityLabel="Logo ONCEX" onLoad={()=>setOriginalLogoReady(true)} onError={()=>setOriginalLogoReady(true)} style={{width:introLogoWidth,height:introLogoWidth*887/1786}}/></Animated.View>
+          </View>
         </Animated.View>
       )}
       <Animated.View
@@ -191,6 +203,7 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
 }
 
 const styles = StyleSheet.create({
+  logoLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   background: { flex: 1, backgroundColor: colors.background },
   backgroundLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   introLogo: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },

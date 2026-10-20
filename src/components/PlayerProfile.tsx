@@ -1,3 +1,5 @@
+import { effectiveTeamPlan } from '../lib/teamPlanPeriods';
+import DeleteHierarchyButton from './DeleteHierarchyButton';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PlayerStatsPanel from './PlayerStatsPanel';
@@ -21,7 +23,7 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
   const [notice, setNotice] = useState('');
   const [jersey,setJersey]=useState('');
   const [score,setScore]=useState<number|null>(null);
-  const [team,setTeam]=useState<{name:string;category:string;plan_code?:string;clubs:{name:string}|null}|null>(null);
+  const [team,setTeam]=useState<{name:string;category:string;plan_code?:string;pending_plan_code?:string|null;plan_period_ends_at?:string;clubs:{name:string}|null}|null>(null);
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -42,8 +44,8 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
       if (permission.error) setNotice(adminError(permission.error)); else setEditable(viewerRole!=='player' && permission.data === true);
       const number=await client().from('profiles').select('jersey_number,oncex_score').eq('id',id).single();
       if(active&&!number.error) {setJersey(number.data.jersey_number==null?'':String(number.data.jersey_number));setScore(number.data.oncex_score??null);}
-      const membership=await client().from('team_members').select('teams(name,category,plan_code,clubs(name))').eq('user_id',id).eq('role_code','player').order('team_id').limit(1).maybeSingle();
-      if(active&&!membership.error&&membership.data?.teams) setTeam(membership.data.teams as unknown as {name:string;category:string;plan_code?:string;clubs:{name:string}|null});
+      const membership=await client().from('team_members').select('teams(name,category,plan_code,pending_plan_code,plan_period_ends_at,clubs(name))').eq('user_id',id).eq('role_code','player').order('team_id').limit(1).maybeSingle();
+      if(active&&!membership.error&&membership.data?.teams) setTeam(membership.data.teams as unknown as {name:string;category:string;plan_code?:string;pending_plan_code?:string|null;plan_period_ends_at?:string;clubs:{name:string}|null});
     }
     void load().catch(() => { if (active) setError('No se ha podido cargar la ficha. Vuelve a entrar en el jugador.'); });
     return () => { active = false; };
@@ -57,13 +59,14 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
       <View style={styles.photoFrame}><ProfilePhotoDisplay key={photoVersion} id={id} name={details.full_name} style={{width:'100%',height:'100%',marginVertical:0,borderRadius:0}} /></View>
       <View style={styles.heroCopy}><Text style={styles.kicker}>ONCEX PLAYER CARD</Text><Text style={styles.title}>{details.full_name || 'Jugador'}</Text><Text style={styles.subtitle}>Ficha personal</Text></View>
     </View>
-    <View style={styles.scoreCard}><View><Text style={styles.scoreLabel}>{team?.plan_code==='pro'?'ONCEX SCORE AVANZADO':'ONCEX SCORE'}</Text><Text style={styles.scoreValue}>{score??0}</Text><Text style={styles.scoreHint}>{score===null?'Pendiente de evaluación':'ONCEX Score'}</Text></View><View style={styles.scoreMark}><Text style={styles.scoreMarkText}>11</Text><Text style={styles.scoreMarkLabel}>PLAYER</Text></View></View>
+    <View style={styles.scoreCard}><View><Text style={styles.scoreLabel}>{team&&effectiveTeamPlan(team)==='pro'?'ONCEX SCORE AVANZADO':'ONCEX SCORE'}</Text><Text style={styles.scoreValue}>{score??0}</Text><Text style={styles.scoreHint}>{score===null?'Pendiente de evaluación':'ONCEX Score'}</Text></View><View style={styles.scoreMark}><Text style={styles.scoreMarkText}>11</Text><Text style={styles.scoreMarkLabel}>PLAYER</Text></View></View>
     <View style={styles.rankCard}><View style={styles.rankGrid}><Rank color="#22C55E" icon="soccer-field" label="POSICIÓN" value={details.position||'Sin definir'} /><Rank icon="tshirt-crew-outline" label="DORSAL" value={jersey||'—'} /><Rank color="#3B82F6" icon="shield-outline" label="EQUIPO" value={team?.clubs?.name??'Sin club asignado'} subtitle={team?.name} /><Rank color="#F6C84C" icon="calendar-account-outline" label="EDAD" value={age===null?'—':`${age} años`} /></View></View>
     <Text style={styles.sectionTitle}>ESTADÍSTICAS OFICIALES</Text>
     <PlayerStatsPanel />
-    {team?.plan_code==='pro' && <><View style={styles.evolutionHeader}><Text style={styles.sectionTitle}>EVOLUCIÓN</Text><Text style={styles.muted}>ÚLTIMOS PARTIDOS</Text></View>
+    {team&&effectiveTeamPlan(team)==='pro' && <><View style={styles.evolutionHeader}><Text style={styles.sectionTitle}>EVOLUCIÓN</Text><Text style={styles.muted}>ÚLTIMOS PARTIDOS</Text></View>
     <View style={styles.evolution}><View style={styles.evolutionLine}>{[0, 1, 2, 3, 4].map(item => <View key={item} style={styles.evolutionPoint} />)}</View><Text style={styles.evolutionEmpty}>La evolución aparecerá cuando se registren partidos.</Text></View></>}
     {editable && <Pressable accessibilityRole="button" accessibilityLabel="Editar ficha del jugador" onPress={()=>router.push({pathname:'/players/edit/[id]',params:{id}})} style={styles.editLink}><Text style={styles.editLinkText}>EDITAR FICHA</Text><Text style={styles.editArrow}>→</Text></Pressable>}
+    {viewerRole==='super_admin'&&<DeleteHierarchyButton kind="player" id={id} fallback="/clubs"/>}
     {!editable && !!notice && <Text style={styles.helper}>{notice}</Text>}
   </ScrollView>;
 }

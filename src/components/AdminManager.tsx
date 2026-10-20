@@ -1,4 +1,5 @@
-import BlendedCardBackground from './BlendedCardBackground';
+import PlanRulesEditor from './PlanRulesEditor';
+import SportCardBackground from './SportCardBackground';
 import { router } from 'expo-router';
 import { listPages } from '../lib/listPages';
 import { useEffect, useRef, useState } from 'react';
@@ -14,7 +15,7 @@ type Option = { id: string; label: string };
 const entities: Record<string, string> = { profiles: 'Perfil', clubs: 'Club', teams: 'Equipo', user_roles: 'Rol', team_members: 'Miembro de equipo', plans: 'Plan', club_subscriptions: 'Plan de club' };
 const actions: Record<string, string> = { INSERT: 'Alta', UPDATE: 'Modificación', DELETE: 'Baja' };
 
-export default function AdminManager({ section }: { section: AdminSection }) {
+export default function AdminManager({ section, initialCreate = false }: { section: AdminSection; initialCreate?: boolean }) {
  const config = adminSections[section];
  const listRef = useRef<FlatList<AdminRow>>(null);
  const [rows, setRows] = useState<AdminRow[]>([]);
@@ -25,11 +26,11 @@ export default function AdminManager({ section }: { section: AdminSection }) {
  const [error, setError] = useState('');
  const [notice, setNotice] = useState('');
  const [editing, setEditing] = useState<AdminRow | null>(null);
- const [creating, setCreating] = useState(false);
+ const [creating, setCreating] = useState(initialCreate);
  const [name, setName] = useState('');
  const [position, setPosition] = useState('');
  const [category, setCategory] = useState('');
- const [description, setDescription] = useState('');
+ const [rules, setRules] = useState<string[]>(['']);
  const [price, setPrice] = useState('0');
  const [active, setActive] = useState(true);
  const [club, setClub] = useState<Option | null>(null);
@@ -53,7 +54,7 @@ export default function AdminManager({ section }: { section: AdminSection }) {
   listRef.current?.scrollToOffset({ offset: 0, animated: true });
   setEditing(row); setCreating(!row); setNotice('');
   setName(row?.name ?? row?.full_name ?? ''); setCategory(row?.category ?? ''); setPosition(row?.position ?? '');
-  setDescription(row?.description ?? ''); setPrice(((row?.monthly_price_cents ?? 0) / 100).toFixed(2));
+  setRules(row?.description?.split('\n').map(rule=>rule.trim()).filter(Boolean).concat('') ?? ['']); setPrice(((row?.monthly_price_cents ?? 0) / 100).toFixed(2));
   setActive(row?.active ?? true);
   setClub(row?.club_id ? { id: row.club_id, label: row.clubs?.name ?? 'Club asignado' } : null);
   setPlan(row?.club_subscriptions ? { id: row.club_subscriptions.plan_id, label: row.club_subscriptions.plans?.name ?? 'Plan asignado' } : null);
@@ -62,6 +63,8 @@ export default function AdminManager({ section }: { section: AdminSection }) {
   if (!name.trim() || name.trim().length > 120) { setNotice('Introduce un nombre de hasta 120 caracteres.'); return; }
   if (section === 'teams' && !category.trim()) { setNotice('Selecciona la categoría del equipo.'); return; }
   if (section === 'teams' && !club) { setNotice('Selecciona el club del equipo.'); return; }
+  const planRules = rules.map(rule=>rule.trim()).filter(Boolean);
+  if(section==='plans'&&!planRules.length){setNotice('Añade al menos una regla al plan.');return;}
   const normalized = price.replace(',', '.');
   if (section === 'plans' && (!/^\d+(\.\d{1,2})?$/.test(normalized) || Number(normalized) * 100 > 2147483647)) { setNotice('Introduce un precio mensual válido con hasta dos decimales.'); return; }
   setBusy(true); setNotice('');
@@ -73,7 +76,7 @@ export default function AdminManager({ section }: { section: AdminSection }) {
    } else {
     const values: Record<string, string | number | boolean> = profiles ? { full_name: name.trim(), ...(section === 'players' && editing?.position !== undefined ? { position: position.trim() } : {}) } : section === 'teams'
      ? { name: name.trim(), category: category.trim(), club_id: club!.id }
-     : { name: name.trim(), description: description.trim(), monthly_price_cents: Math.round(Number(normalized) * 100), active };
+     : { name: name.trim(), description: planRules.join('\n'), monthly_price_cents: Math.round(Number(normalized) * 100), active };
     const query = editing ? client.from(config.table).update(values).eq('id', editing.id) : client.from(config.table).insert(values);
     const result = await query.select('id').single();
     if (result.error) throw result.error;
@@ -106,18 +109,18 @@ export default function AdminManager({ section }: { section: AdminSection }) {
  };
  const header = <View>
   <Text style={styles.title}>{config.title}</Text>
-  {section === 'plans' && <Text style={styles.body}>Catálogo de planes mensuales en EUR. La asignación a clubes se gestiona desde Clubes.</Text>}
+  {section === 'plans' && <Text style={styles.body}>Catálogo de planes mensuales en EUR. Los planes nuevos se guardan aquí; los accesos de equipos siguen definidos por BASIC y PRO.</Text>}
   {section === 'activity' && <Text style={styles.body}>Altas, modificaciones y bajas desde la activación del registro de actividad.</Text>}
   {section !== 'activity' && <TextInput accessibilityLabel="Buscar por nombre" placeholder="Buscar por nombre" placeholderTextColor={colors.muted} value={search} style={styles.input} onChangeText={value => { setSearch(value);  setLoading(true); }} />}
   {canCreate && !formOpen && <Button label="CREAR" onPress={() => begin(null)} disabled={busy} />}
   {formOpen && <View style={styles.form}>
    {notice ? <Text accessibilityLiveRegion="polite" style={styles.message}>{notice}</Text> : null}
-   <Text style={styles.subtitle}>{creating ? 'Nuevo registro' : 'Editar'}</Text>
+   <Text style={styles.subtitle}>{creating ? section==='plans'?'Crear nuevo plan':'Nuevo registro' : 'Editar'}</Text>
    <Text style={styles.body}>Nombre</Text><TextInput accessibilityLabel="Nombre" maxLength={120} value={name} onChangeText={setName} style={styles.input} />
    {section === 'players' && editing?.position !== undefined && <><Text style={styles.body}>Posición</Text><TextInput accessibilityLabel="Posición del jugador" placeholder="Por ejemplo, delantero" placeholderTextColor={colors.muted} maxLength={80} value={position} onChangeText={setPosition} style={styles.input} /></>}
    {section === 'teams' && <><TeamCategoryPicker value={category} onChange={setCategory} disabled={busy} />{editing ? <Text style={styles.body}>Club: {club?.label}</Text> : <AdminRecordPicker title="Club" table="clubs" value={club} onChange={setClub} />}</>}
    {section === 'clubs' && <><AdminRecordPicker title="Plan" table="plans" value={plan} onChange={setPlan} /><Text style={styles.body}>{editing?.club_subscriptions ? `Estado: ${editing.club_subscriptions.status}` : 'Plan opcional. Puedes asignarlo más adelante.'}</Text></>}
-   {section === 'plans' && <><Text style={styles.body}>Descripción</Text><TextInput accessibilityLabel="Descripción" value={description} onChangeText={setDescription} multiline style={styles.input} /><Text style={styles.body}>Precio mensual (€)</Text><TextInput accessibilityLabel="Precio mensual en euros" keyboardType="decimal-pad" value={price} onChangeText={setPrice} style={styles.input} /><Choice options={[{ id: 'true', label: 'Activo' }, { id: 'false', label: 'Inactivo' }]} value={String(active)} onChange={value => setActive(value === 'true')} /></>}
+   {section === 'plans' && <><PlanRulesEditor value={rules} onChange={setRules} disabled={busy} /><Text style={styles.body}>Precio mensual (€)</Text><TextInput accessibilityLabel="Precio mensual en euros" keyboardType="decimal-pad" value={price} onChangeText={setPrice} style={styles.input} /><Choice options={[{ id: 'true', label: 'Activo' }, { id: 'false', label: 'Inactivo' }]} value={String(active)} onChange={value => setActive(value === 'true')} /></>}
    <Button label={busy ? 'GUARDANDO…' : 'GUARDAR'} onPress={save} disabled={busy} />
    <Button label="CERRAR EDICIÓN" secondary disabled={busy} onPress={() => { setEditing(null); setCreating(false); }} />
    {editing && profiles && <UserAssignments key={editing.id} row={editing} refresh={refreshRoles} />}
@@ -130,16 +133,17 @@ export default function AdminManager({ section }: { section: AdminSection }) {
   <Text style={styles.body}>{count} registros</Text>
  </View>;
  return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><FlatList ref={listRef} data={loading ? [] : rows} keyExtractor={item => String(item.id)} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" ListHeaderComponent={header} ListEmptyComponent={!loading && !error ? <Text style={styles.body}>No hay registros.</Text> : null} renderItem={({ item }) => section === 'activity'
-  ? <View style={styles.card}><BlendedCardBackground /><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
-  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><BlendedCardBackground /><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text><Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
+  ? <View style={styles.card}><SportCardBackground /><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
+  : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><SportCardBackground /><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text>{section==='plans'&&item.description?.split('\n').map(rule=>rule.trim()).filter(Boolean).map((rule,index)=><Text key={index} style={styles.planRule}>✓ {rule}</Text>)}<Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
   /></KeyboardAvoidingView>;
 }
 const styles = StyleSheet.create({
+ planRule:{color:'#F4E9EC',fontSize:13,lineHeight:23,marginTop:5},
  flex: { flex: 1 }, content: { padding: 22, paddingTop: 0, paddingBottom: 40 },
  title: { color: colors.white, fontSize: 28, fontWeight: '800' }, subtitle: { color: colors.white, fontSize: 20, fontWeight: '800' },
  body: { color: colors.muted, lineHeight: 21, marginVertical: 8 },
  input: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, padding: 14, borderRadius: 10, color: colors.white, marginVertical: 6 },
- card: { backgroundColor: 'transparent', borderColor: colors.border, borderWidth: 0, borderRadius: 18, padding: 16, marginTop: 12 },
+ card: { backgroundColor: 'transparent', borderColor: colors.border, borderWidth: 0, borderTopLeftRadius: 28, borderTopRightRadius: 6, borderBottomRightRadius: 28, borderBottomLeftRadius: 6, overflow: 'hidden', padding: 16, marginTop: 12 },
  playerMeta: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 6 },
  label: { color: colors.white, fontWeight: '700', fontSize: 16 }, form: { marginVertical: 20 },
  message: { color: colors.white, lineHeight: 22, marginVertical: 14 }, loader: { margin: 20 },

@@ -1,10 +1,11 @@
-import { supabase } from './supabase';
+import { profilePhotoUrls } from './profilePhotos';
+import { client } from './client';
 import { isMissingPlayerPosition } from './playerDetails';
+export { client } from './client';
 export type ProvisionKind = 'club' | 'team' | 'coach' | 'player';
 export type HierarchyItem = { id: string; name: string; subtitle?: string; role?: string; photoUrl?: string };
 export type ProvisionInput = { kind: ProvisionKind; name: string; email: string; password: string; category?: string; clubId?: string; teamId?: string; coachId?: string };
 export type ProvisionResult = { club_id: string; team_id: string | null; user_id: string; role: string };
-export function client() { if (!supabase) throw new Error('Supabase no está configurado.'); return supabase; }
 export async function createHierarchyAccount(input: ProvisionInput): Promise<ProvisionResult> {
  const { data: sessionData, error: sessionError } = await client().auth.getSession();
  if (sessionError || !sessionData.session) throw new Error('Vuelve a iniciar sesión antes de crear la cuenta.');
@@ -63,7 +64,11 @@ export async function listTeamPeople(teamId: string, roles: string[], page: numb
  let result = await run(roles.includes('player'));
  if (isMissingPlayerPosition(result.error)) result = await run(false);
  if (result.error) throw result.error;
- return { items: (result.data as unknown as { user_id: string; role_code: string; profiles: { full_name: string; position?: string }; teams: { clubs: { name: string } | null } }[]).map(row => ({ id: row.user_id, name: row.profiles.full_name || 'Sin nombre', role: row.role_code, subtitle: row.role_code === 'player' ? `${row.teams?.clubs?.name ?? 'Sin club asignado'} · ${row.profiles.position?.trim() || 'Posición sin definir'}` : undefined })), count: result.count ?? 0 };
+ const ids = [...new Set((result.data as unknown as {user_id:string}[]).map(row=>row.user_id))];
+ const photos = ids.length ? await client().from('profiles').select('id,photo_path').in('id',ids) : null;
+ const paths = new Map<string,string>((photos?.data ?? []).filter(row=>row.photo_path).map(row=>[row.id,row.photo_path]));
+ const urls = await profilePhotoUrls([...paths.values()]);
+ return { items: (result.data as unknown as { user_id: string; role_code: string; profiles: { full_name: string; position?: string }; teams: { clubs: { name: string } | null } }[]).map(row => ({ id: row.user_id, photoUrl: urls.get(paths.get(row.user_id) ?? ''), name: row.profiles.full_name || 'Sin nombre', role: row.role_code, subtitle: row.role_code === 'player' ? `${row.teams?.clubs?.name ?? 'Sin club asignado'} · ${row.profiles.position?.trim() || 'Posición sin definir'}` : undefined })), count: result.count ?? 0 };
 }
 
 // Native fetch responses may come from another polyfill: don't rely on instanceof.
