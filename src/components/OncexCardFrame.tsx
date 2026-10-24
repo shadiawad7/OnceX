@@ -16,6 +16,7 @@ export default function OncexCardFrame(){
   <Path d={outline} transform="translate(10 12) scale(.944 .955)" stroke="#FFD9E2" strokeOpacity="0.8" strokeWidth="1.4"/>
   <G clipPath={'url(#'+id+'clip)'}>
    <Path d="M58 96 H132 V548 H58 Z" fill={'url(#'+id+'rail)'} opacity=".9"/>
+   <Path d="M45 70 H154 V570 H45 Z" fill={'url(#'+id+'rail)'} opacity=".34"/>
    <Path d="M180 112 L244 141 V262 C244 350 218 414 180 447 C142 414 116 350 116 262 V141 Z" fill="none" stroke="#FFB2C4" strokeOpacity=".16" strokeWidth="10"/>
    <Path d="M180 154 L222 174 V255 C222 313 204 359 180 384 C156 359 138 313 138 255 V174 Z" fill="none" stroke="#FFB2C4" strokeOpacity=".1" strokeWidth="5"/>
    <Path d="M80 135 L142 135 L283 396 H221 Z M235 135 H297 L157 396 H95 Z" fill="#F98BA5" opacity="0.07"/>
