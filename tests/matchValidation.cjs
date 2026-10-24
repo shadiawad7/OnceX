@@ -1,0 +1,12 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),ts=require('typescript'),fs=require('fs'),Module=require('module');
+const m=new Module('validation',module);m._compile(ts.transpileModule(fs.readFileSync('src/lib/matchValidation.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,'validation');const {matchStatisticsError:validate}=m.exports;
+const player={player_name:'Jugador',minutes:90,goals:0,own_goals:0,assists:0,yellow_cards:0,red_cards:0};
+test('fewer or more scorers than match result rejected',()=>{assert.match(validate([{...player,goals:1}],2,0,90),/coincidir/);assert.match(validate([{...player,goals:3}],2,0,90),/coincidir/);});
+test('assists cannot exceed goals',()=>assert.match(validate([{...player,goals:2},{...player,assists:3}],2,0,90),/asistencias/));
+test('player cannot assist their own goals',()=>assert.match(validate([{...player,goals:2,assists:1}],2,0,90),/sí mismo/));
+test('goals without assist are allowed',()=>assert.equal(validate([{...player,goals:2}],2,0,90),''));
+test('valid reciprocal assists allowed',()=>assert.equal(validate([{...player,goals:1,assists:1},{...player,goals:1,assists:1}],2,0,90),''));
+test('zero draw valid',()=>assert.equal(validate([player],0,0,90),''));
+test('own goals bounded by opponent goals',()=>assert.match(validate([{...player,own_goals:2}],0,1,90),/propia/));
+test('nonparticipant actions rejected',()=>assert.match(validate([{...player,minutes:0,goals:1}],1,0,90),/0 minutos/));
+test('card and minute bounds enforced',()=>{assert.match(validate([{...player,yellow_cards:3}],0,0,90),/tarjetas/);assert.match(validate([{...player,minutes:91}],0,0,90),/minutos/);});

@@ -1,3 +1,6 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { client } from '../lib/client';
 import SportCardBackground from './SportCardBackground';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,18 +18,20 @@ const stats = [
   { label: 'Clean Sheets', code: 'CS', icon: 'shield-check-outline', color: '#00FF66' },
 ] as const;
 
-export default function PlayerStatsPanel() {
+export default function PlayerStatsPanel({playerId}:{playerId:string}) {
+  const [totals,setTotals]=useState<Record<string,number|null>|null>(null);
+  useFocusEffect(useCallback(()=>{let active=true;void (async()=>{const result=await client().rpc('player_match_totals',{target_player:playerId});if(active)setTotals(result.error?null:result.data as Record<string,number|null>);})().catch(()=>{if(active)setTotals(null);});return()=>{active=false;};},[playerId]));
   return <View style={styles.grid}>
-    {stats.map(stat => <View key={stat.code} style={styles.metric} accessible accessibilityLabel={`${stat.label}: sin datos`}>
+    {stats.map(stat => <View key={stat.code} style={styles.metric} accessible accessibilityLabel={`${stat.label}: ${totals?.[stat.label]??0}`}>
       <SportCardBackground />
       <View style={styles.row}>
         <View style={[styles.medallion, { borderColor: playerColorWithOpacity(stat.color, playerIconBorderOpacityPercent) }]}><MaterialCommunityIcons style={styles.foregroundIcon} name={stat.icon} size={22} color={playerColorWithOpacity(stat.color, playerIconOpacityPercent)} /></View>
-        <Text style={styles.value}>—</Text>
+        <Text style={styles.value}>{totals?.[stat.label]??0}</Text>
       </View>
       <Text style={styles.label}>{stat.label}</Text>
       <LinearGradient pointerEvents="none" colors={['rgba(255, 80, 102, 0.65)', 'rgba(255, 80, 102, 0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.baseline} />
     </View>)}
-    <Text style={styles.hint}>Las estadísticas aparecerán al registrar partidos.</Text>
+    <Text style={styles.hint}>Las estadísticas se calculan con los partidos confirmados por tu entrenador.</Text>
   </View>;
 }
 

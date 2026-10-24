@@ -1,3 +1,4 @@
+import { checkTeamJersey, useTeamJerseyAvailability } from '../../../hooks/useTeamJerseyAvailability';
 import { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -22,6 +23,8 @@ function Editor({id}:{id:string}) {
  const [photo,setPhoto]=useState<ProfilePhoto|null>(null);
  const [birth,setBirth]=useState('');
  const [jersey,setJersey]=useState('');
+ const [teamIds,setTeamIds]=useState<string[]>([]);
+ const jerseyCheck=useTeamJerseyAvailability(teamIds,jersey,id);
  const [editable,setEditable]=useState(false);
  const [saving,setSaving]=useState(false);
  const [error,setError]=useState('');
@@ -32,7 +35,8 @@ function Editor({id}:{id:string}) {
   if(permission.data!==true)throw new Error('No tienes permiso para editar este jugador.');
   const result=await client().from('profiles').select('full_name,position,birth_date,jersey_number').eq('id',id).single();
   if(result.error)throw result.error;
-  if(active){setDetails({full_name:result.data.full_name,position:result.data.position,birth_date:result.data.birth_date});setBirth(birthDateInput(result.data.birth_date));setJersey(result.data.jersey_number==null?'':String(result.data.jersey_number));setEditable(true);}
+  const membership=await client().from('team_members').select('team_id').eq('user_id',id).eq('role_code','player');if(membership.error)throw membership.error;
+  if(active){setTeamIds(membership.data.map(row=>row.team_id));setDetails({full_name:result.data.full_name,position:result.data.position,birth_date:result.data.birth_date});setBirth(birthDateInput(result.data.birth_date));setJersey(result.data.jersey_number==null?'':String(result.data.jersey_number));setEditable(true);}
  })().catch(reason=> {if(active)setError(reason instanceof Error?reason.message:adminError(reason));});return()=>{active=false;};},[id]);
   function change(field: keyof Details, value: string) {
     setDetails(previous => previous ? { ...previous, [field]: value } : previous); setNotice('');
@@ -44,8 +48,10 @@ function Editor({id}:{id:string}) {
     if (!['Portero', 'Defensa', 'Centrocampista', 'Delantero'].includes(details.position)) { setError('Selecciona una de las cuatro posiciones.'); return; }
     if (!details.full_name.trim()) { setError('El nombre es obligatorio.'); return; }
     if(jersey && (!/^\d{1,2}$/.test(jersey) || Number(jersey)<1 || Number(jersey)>99)) {setError('El dorsal debe estar entre 1 y 99.');return;}
+    if(jersey&&!jerseyCheck.available){setError(jerseyCheck.message||'Comprueba el dorsal.');return;}
     setSaving(true); setError(''); setNotice('');
     try {
+      if(jersey&&!(await Promise.all(teamIds.map(team=>checkTeamJersey(team,jersey,id)))).every(Boolean)){setError('Este dorsal ya está ocupado en el equipo.');return;}
       const result = await client().from('profiles').update({ ...details, full_name: details.full_name.trim(), position: details.position.trim(), birth_date: birthDate, jersey_number: jersey ? Number(jersey) : null }).eq('id', id).select('id').single();
       if (result.error) {setError(adminError(result.error));return;}
       setDetails({ ...details, birth_date: birthDate });
@@ -62,7 +68,7 @@ function Editor({id}:{id:string}) {
  const enabled=editable&&!saving;
  const age=playerAge(parseBirthDate(birth)??null);
  return <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><ProfilePhotoDisplay id={id} name={details.full_name}/>
-    <View style={styles.editor}><Text style={styles.sectionTitle}>EDITAR FICHA</Text><ProfilePhotoPicker value={photo} onChange={value=>{setPhoto(value);setError('');setNotice('');}} disabled={saving} onError={setError}/><Text style={styles.helper}>{editable ? 'Gestiona la información personal del jugador.' : 'Ficha del jugador'}</Text><Text style={styles.label}>Nombre</Text><TextInput accessibilityLabel="Nombre del jugador" style={styles.input} value={details.full_name} onChangeText={value => change('full_name', value)} editable={enabled} maxLength={120} /><Text style={styles.label}>Dorsal</Text><TextInput accessibilityLabel="Dorsal" style={styles.input} value={jersey} onChangeText={value=>setJersey(value.replace(/\D/g,''))} keyboardType="number-pad" maxLength={2} editable={enabled}/><Text style={styles.label}>Posición</Text><SelectionList label="Posición" value={details.position} options={['Portero', 'Defensa', 'Centrocampista', 'Delantero'].map(value => ({ value, label: value }))} disabled={!enabled} onChange={value => change('position', value)} /><Text style={styles.label}>Fecha de nacimiento · {age === null ? 'Edad sin definir' : `${age} años`}</Text><BirthDateCalendar value={birth} onChange={value => { setBirth(value); setNotice(''); }} disabled={!enabled} />{!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}{!!notice && <Text style={styles.helper}>{notice}</Text>}{editable && <Button label={saving ? 'GUARDANDO…' : 'GUARDAR FICHA'} onPress={() => { void save(); }} disabled={saving} />}</View>
+    <View style={styles.editor}><Text style={styles.sectionTitle}>EDITAR FICHA</Text><ProfilePhotoPicker value={photo} onChange={value=>{setPhoto(value);setError('');setNotice('');}} disabled={saving} onError={setError}/><Text style={styles.helper}>{editable ? 'Gestiona la información personal del jugador.' : 'Ficha del jugador'}</Text><Text style={styles.label}>Nombre</Text><TextInput accessibilityLabel="Nombre del jugador" style={styles.input} value={details.full_name} onChangeText={value => change('full_name', value)} editable={enabled} maxLength={120} /><Text style={styles.label}>Dorsal</Text><TextInput accessibilityLabel="Dorsal" style={styles.input} value={jersey} onChangeText={value=>setJersey(value.replace(/\D/g,''))} keyboardType="number-pad" maxLength={2} editable={enabled}/>{!!jerseyCheck.message&&<Text accessibilityLiveRegion="polite" style={jerseyCheck.checking?styles.helper:styles.error}>{jerseyCheck.message}</Text>}<Text style={styles.label}>Posición</Text><SelectionList label="Posición" value={details.position} options={['Portero', 'Defensa', 'Centrocampista', 'Delantero'].map(value => ({ value, label: value }))} disabled={!enabled} onChange={value => change('position', value)} /><Text style={styles.label}>Fecha de nacimiento · {age === null ? 'Edad sin definir' : `${age} años`}</Text><BirthDateCalendar value={birth} onChange={value => { setBirth(value); setNotice(''); }} disabled={!enabled} />{!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}{!!notice && <Text style={styles.helper}>{notice}</Text>}{editable && <Button label={saving ? 'GUARDANDO…' : 'GUARDAR FICHA'} onPress={() => { void save(); }} disabled={saving||!!jersey&&!jerseyCheck.available} />}</View>
  </ScrollView>;
 }
 const styles=StyleSheet.create({content:{padding:22,paddingBottom:40},editor:{paddingTop:8},sectionTitle:{color:colors.white,fontWeight:'800',fontSize:22},helper:{color:colors.muted,lineHeight:20,marginVertical:12},label:{color:colors.white,marginTop:16,marginBottom:8},input:{color:colors.white,backgroundColor:colors.surface,borderWidth:1,borderColor:colors.border,borderRadius:10,padding:14,minHeight:48},error:{color:colors.redBright,marginTop:12}});

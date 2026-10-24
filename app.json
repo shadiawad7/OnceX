@@ -20,7 +20,8 @@
     },
     "web": {
       "favicon": "./assets/oncex-logo.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "plugins": [
       "expo-router",
@@ -31,7 +32,8 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-font"
     ],
     "scheme": "oncex"
   }

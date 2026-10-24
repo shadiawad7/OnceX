@@ -1,0 +1,20 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { client } from '../lib/client';
+import Button from './Button';
+import { colors } from '../theme/colors';
+type Licence={player_id:string;identity_id:string;full_name:string;active:boolean;stops_at:string|null;period_ends_at:string|null};
+export default function TeamLicenceList({teamId,editable}:{teamId:string;editable:boolean}){
+ const [rows,setRows]=useState<Licence[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[version,setVersion]=useState(0),[busy,setBusy]=useState(false),[confirmation,setConfirmation]=useState<Licence|null>(null);
+ // version intentionally refreshes the RPC after a confirmed change.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ useFocusEffect(useCallback(()=>{let alive=true;setLoading(true);void (async()=>{const result=await client().rpc('team_player_licences',{target_team:teamId});if(!alive)return;if(result.error){setError(['PGRST202','42883'].includes(result.error.code)?'Gestionar licencias requiere activar la migración del plan único en Supabase.':result.error.message);setRows([]);}else{setError('');setRows(result.data as Licence[]);}setLoading(false);})().catch(()=>{if(alive){setError('No se han podido cargar las licencias.');setLoading(false);}});return()=>{alive=false;};},[teamId,version]));
+ async function confirm(){if(!confirmation||busy)return;setBusy(true);setError('');const activate=!confirmation.active||!!confirmation.stops_at;try{const result=await client().rpc('set_player_licence',{target_player:confirmation.player_id,target_team:teamId,activate});if(result.error)throw result.error;setConfirmation(null);setVersion(value=>value+1);}catch(reason){setError((reason as Error).message||'No se ha podido actualizar la licencia.');}finally{setBusy(false);}}
+ return <View style={styles.container}><Text style={styles.title}>Licencias del equipo</Text>{loading&&<ActivityIndicator color={colors.red}/>}<Text style={styles.text}>Una licencia por jugador y club, aunque participe en varios equipos. Activarla registra un periodo facturable; no realiza ningún cobro.</Text>
+ {rows.map(row=><View key={row.player_id} style={styles.row}><Text style={styles.name}>{row.full_name}</Text><Text selectable style={styles.id}>ID permanente: {row.identity_id}</Text><Text style={styles.text}>{row.active?(row.stops_at?'Baja programada':'Activa'):'Inactiva'}{row.period_ends_at?` · Periodo hasta ${new Date(row.period_ends_at).toLocaleDateString('es-ES')}`:''}</Text>{editable&&<Button secondary disabled={busy||!!confirmation} label={row.stops_at&&row.active?'CANCELAR BAJA':row.active?'DAR DE BAJA AL FINAL DEL PERIODO':'ACTIVAR LICENCIA'} onPress={()=>setConfirmation(row)}/>}</View>)}
+ {!loading&&!error&&rows.length===0&&<Text style={styles.text}>Todavía no hay jugadores en este equipo.</Text>}
+ {confirmation&&<View style={styles.row}><Text style={styles.name}>Confirmar · {confirmation.full_name}</Text><Text style={styles.text}>{confirmation.active&&!confirmation.stops_at?'La licencia seguirá siendo facturable hasta finalizar el periodo actual. La baja económica se aplica después.':'La licencia tendrá todas las funciones ONCEX por 3,99 €/mes. Si existe un periodo vigente, se conserva sin duplicarlo.'}</Text><Button disabled={busy} label={busy?'GUARDANDO…':'CONFIRMAR'} onPress={()=>{void confirm();}}/><Button secondary disabled={busy} label="CANCELAR" onPress={()=>setConfirmation(null)}/></View>}
+ {!!error&&<Text accessibilityRole="alert" style={styles.error}>{error}</Text>}</View>;
+}
+const styles=StyleSheet.create({container:{marginTop:24},title:{color:colors.white,fontSize:20,fontWeight:'900'},text:{color:'#D9CFD4',fontSize:12,lineHeight:20,marginVertical:10},row:{padding:16,borderRadius:20,borderColor:'#743043',borderWidth:1,marginTop:14,backgroundColor:'rgba(10,10,14,0.65)'},name:{color:colors.white,fontSize:16,fontWeight:'800'},id:{color:'#BEB5BA',fontSize:10,marginTop:8},error:{color:'#FFB4B9',lineHeight:21,marginTop:12}});

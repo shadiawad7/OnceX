@@ -7,7 +7,7 @@ import { colors } from '../../theme/colors';
 
 const sections = [
  {title:'Usuarios',icon:'account-group-outline',caption:'CLUBES → EQUIPOS → ENTRENADORES → JUGADORES',description:'Organiza toda la estructura de ONCEX, crea cuentas y gestiona sus datos.',href:'/clubs',color:'#00FF66'},
- {title:'Planes',icon:'shield-star-outline',caption:'BASIC · PRO',description:'Consulta las prestaciones disponibles y asigna el plan de cada equipo desde su club.',href:'/admin/team-plans',color:'#FFD43B'},
+ {title:'Planes',icon:'shield-star-outline',caption:'ONCEX · 3,99 €',description:'Un único plan con todas las funciones y licencias por jugador activo.',href:'/admin/team-plans',color:'#FFD43B'},
 ] as const;
 export default function AdminHome() {
  return <AdminShell><ScrollView contentContainerStyle={styles.content}>

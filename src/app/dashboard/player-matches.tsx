@@ -1,100 +1,70 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AccountShell from '../../components/AccountShell';
+import ClubBadge from '../../components/ClubBadge';
+import PersonAvatar from '../../components/PersonAvatar';
+import { clubPhotoUrls } from '../../lib/clubPhotos';
+import { client } from '../../lib/client';
+import { loadTeamMatches, loadMatchSummary, matchError, type MatchPlayer, type TeamMatch } from '../../lib/matches';
 import { colors } from '../../theme/colors';
 
-type Phase = 'history' | 'input' | 'review' | 'confirmed';
-type EventType = 'Gol' | 'Asistencia' | 'Amarilla' | 'Cambio';
-type MatchEvent = { id: number; type: EventType; player: string; minute: string; secondary?: string };
-
-const initialEvents: MatchEvent[] = [
-  { id: 1, type: 'Gol', player: 'Javier López', minute: "23'" },
-  { id: 2, type: 'Asistencia', player: 'Dani Torres', minute: "23'" },
-  { id: 3, type: 'Amarilla', player: 'Carlos Pérez', minute: "41'" },
-  { id: 4, type: 'Cambio', player: 'Marcos Ruiz', secondary: 'Hugo Martín', minute: "60'" },
-];
-
-export default function PlayerMatches() {
-  const [phase, setPhase] = useState<Phase>('history');
-  const [mode, setMode] = useState<'Texto' | 'Audio'>('Texto');
-  const [note, setNote] = useState('');
-  const [events, setEvents] = useState(initialEvents);
-
-  function analyze() {
-    setEvents(initialEvents);
-    setPhase('review');
-  }
-
-  function removeEvent(id: number) {
-    setEvents(current => current.filter(event => event.id !== id));
-  }
-
-  return <AccountShell allowed={['player']}>
-    {() => <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.headerRow}>
-        <View><Text style={styles.eyebrow}>CENTRO DE PARTIDOS</Text><Text style={styles.title}>Partidos</Text><Text style={styles.subtitle}>Historial y registro inteligente</Text></View>
-        <View style={styles.headerIcon}><MaterialCommunityIcons name="soccer" size={24} color={colors.redBright} /></View>
-      </View>
-
-      {phase === 'history' && <History onRegister={() => setPhase('input')} />}
-      {phase === 'input' && <InputStep mode={mode} setMode={setMode} note={note} setNote={setNote} onAnalyze={analyze} onBack={() => setPhase('history')} />}
-      {phase === 'review' && <ReviewStep events={events} onRemove={removeEvent} onBack={() => setPhase('input')} onConfirm={() => setPhase('confirmed')} />}
-      {phase === 'confirmed' && <Confirmed onDone={() => setPhase('history')} />}
-    </ScrollView>}
-  </AccountShell>;
+const summaryActions=[
+ {key:'goals',label:'Gol',plural:'Goles',icon:'soccer',color:'#FFFFFF'},
+ {key:'own_goals',label:'Gol en propia',plural:'Goles en propia',icon:'soccer',color:'#FF647C'},
+ {key:'assists',label:'Asistencia',plural:'Asistencias',icon:'shoe-cleat',color:'#54D7E5'},
+ {key:'yellow_cards',label:'Tarjeta amarilla',plural:'Tarjetas amarillas',icon:'card',color:'#FFD43B'},
+ {key:'red_cards',label:'Tarjeta roja',plural:'Tarjetas rojas',icon:'card',color:'#FF465D'},
+] as const;
+type MatchTeam={id:string;name:string;clubs:{name:string;photo_path:string|null}|null;photoUrl?:string};
+const tones={win:{accent:'#359A65',glow:'rgba(53,154,101,0.25)',label:'Victoria'},draw:{accent:'#929AA5',glow:'rgba(146,154,165,0.2)',label:'Empate'},loss:{accent:'#D85567',glow:'rgba(216,85,103,0.23)',label:'Derrota'}};
+export default function PlayerMatches(){return <AccountShell allowed={['player']}>{account=><PlayerMatchesContent userId={account.userId}/>}</AccountShell>;}
+function PlayerMatchesContent({userId}:{userId:string}){
+ const [teams,setTeams]=useState<MatchTeam[]>([]),[teamId,setTeamId]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(true);
+ const team=teams.find(item=>item.id===teamId)??teams[0];
+ useFocusEffect(useCallback(()=>{let active=true;setLoading(true);void(async()=>{
+  const result=await client().from('team_members').select('teams(id,name,clubs(name,photo_path))').eq('user_id',userId).eq('role_code','player').order('team_id');
+  if(result.error)throw result.error;
+  const records=(result.data as unknown as {teams:MatchTeam|null}[]).flatMap(row=>row.teams?[row.teams]:[]);
+  const urls=await clubPhotoUrls(records.flatMap(item=>item.clubs?.photo_path?[item.clubs.photo_path]:[]));
+  if(active){setTeams(records.map(item=>({...item,photoUrl:urls.get(item.clubs?.photo_path??'')})));setError('');}
+ })().catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[userId]));
+ return <ScrollView contentContainerStyle={styles.content}><Text style={styles.eyebrow}>CENTRO DE PARTIDOS</Text><Text style={styles.title}>Partidos</Text><Text style={styles.subtitle}>Resultados y actuaciones del equipo</Text>
+  {loading&&<ActivityIndicator color={colors.red}/>}{!!error&&<Text accessibilityRole="alert" style={styles.message}>{error}</Text>}
+  {teams.length>1&&<View style={styles.teamChoices}>{teams.map(item=><Pressable key={item.id} accessibilityRole="button" accessibilityState={{selected:item.id===team?.id}} onPress={()=>setTeamId(item.id)} style={[styles.teamChoice,item.id===team?.id&&styles.teamChoiceSelected]}><Text style={styles.teamChoiceText}>{item.name}</Text></Pressable>)}</View>}
+  {!loading&&!error&&(team?<MatchHistory key={team.id} team={team}/>:<Text style={styles.message}>Todavía no tienes un equipo asignado.</Text>)}
+ </ScrollView>;
 }
-
-function History({ onRegister }: { onRegister: () => void }) {
-  return <>
-    <Pressable accessibilityRole="button" onPress={onRegister} style={styles.primaryButton}><MaterialCommunityIcons name="plus" size={20} color={colors.white} /><Text style={styles.primaryText}>Registrar partido</Text></Pressable>
-    <Text style={styles.sectionTitle}>MIS PARTIDOS</Text>
-    <MatchCard round="Jornada 1" date="12 OCT 2026" rival="Cheste" score="2 - 0" outcome="Victoria" tone="win" />
-    <MatchCard round="Jornada 2" date="05 OCT 2026" rival="Atlético Turís" score="1 - 1" outcome="Empate" tone="draw" />
-  </>;
+function MatchHistory({team}:{team:MatchTeam}){
+ const [matches,setMatches]=useState<TeamMatch[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
+ useFocusEffect(useCallback(()=>{let active=true;setLoading(true);void loadTeamMatches(team.id).then(data=>{if(active){setMatches(data.filter(match=>match.status==='confirmed'));setError('');}}).catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[team.id]));
+ return <>{loading&&<ActivityIndicator color={colors.red}/>}{!!error&&<Text accessibilityRole="alert" style={styles.message}>{error}</Text>}{!loading&&!error&&!matches.length&&<Text style={styles.message}>Todavía no hay partidos confirmados. Aparecerán cuando el entrenador registre la alineación y las actuaciones.</Text>}{matches.map(match=><MatchCard key={match.id} match={match} team={team}/>)}</>;
 }
-
-function MatchCard({ round, date, rival, score, outcome, tone }: { round: string; date: string; rival: string; score: string; outcome: string; tone: 'win' | 'draw' | 'loss' }) {
-  return <Pressable style={styles.matchCard} accessibilityRole="button" accessibilityLabel={`${round}, ONCEX contra ${rival}, ${outcome}`}>
-    <View style={styles.matchTop}><Text style={styles.round}>{round}</Text><Text style={styles.date}>{date}</Text></View>
-    <View style={styles.matchTeams}><View style={styles.club}><View style={styles.clubBadge}><MaterialCommunityIcons name="shield-star" size={22} color={colors.redBright} /></View><Text style={styles.clubName}>ONCEX</Text></View><View style={styles.result}><Text style={styles.score}>{score}</Text><View style={[styles.outcome, styles[`outcome_${tone}`]]}><Text style={styles.outcomeText}>{outcome}</Text></View></View><View style={styles.club}><View style={styles.rivalBadge}><MaterialCommunityIcons name="shield-outline" size={22} color={colors.muted} /></View><Text style={styles.clubName}>{rival}</Text></View></View>
-    <View style={styles.matchFooter}><Text style={styles.footerText}>Tu actuación</Text><Text style={styles.footerValue}>Gol · 23&apos;</Text><MaterialCommunityIcons name="chevron-right" size={20} color={colors.muted} /></View>
-  </Pressable>;
+function MatchCard({match,team}:{match:TeamMatch;team:MatchTeam}){
+ const [open,setOpen]=useState(false),[players,setPlayers]=useState<MatchPlayer[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState('');
+ const tone=(match.goals_for??0)>(match.goals_against??0)?'win':match.goals_for===match.goals_against?'draw':'loss';
+ const palette=tones[tone];
+ const actions=summaryActions.flatMap(action=>players.filter(player=>player[action.key]>0).map(player=>({player,action,count:player[action.key]})));
+ useEffect(()=>{if(!open)return;let active=true;void loadMatchSummary(match.id).then(data=>{if(active)setPlayers(data.players);}).catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[open,match.id]);
+ return <>
+  <View style={[styles.matchCard,{borderLeftColor:palette.accent}]}><LinearGradient pointerEvents="none" colors={[palette.glow,'rgba(15,16,20,0)']} start={{x:0,y:0}} end={{x:0.8,y:1}} style={styles.fill}/><View pointerEvents="none" style={[styles.accent,{backgroundColor:palette.accent}]}/>
+   <Text style={styles.date}>{match.played_on}{match.venue==='away'?' · Visitante':match.venue==='home'?' · Local':''}</Text><View style={styles.matchTeams}><View style={styles.club}><ClubBadge key={team.photoUrl??team.id} url={team.photoUrl} name={team.clubs?.name??team.name} size={50}/><Text style={styles.clubName}>{team.name}</Text></View><View style={styles.result}><Text style={styles.score}>{match.goals_for} – {match.goals_against}</Text><Text style={[styles.outcome,{color:palette.accent}]}>{palette.label}</Text></View><View style={styles.club}><MaterialCommunityIcons name="shield-outline" size={40} color="#D4C8CE"/><Text style={styles.clubName}>{match.opponent}</Text></View></View>
+   <Pressable accessibilityRole="button" accessibilityLabel={`Resumen contra ${match.opponent}`} onPress={()=>{setLoading(true);setError('');setOpen(true);}} style={styles.footer}><MaterialCommunityIcons name="clipboard-text-outline" size={20} color={colors.white}/><Text style={styles.summaryLink}>Resumen</Text><MaterialCommunityIcons name="chevron-right" size={22} color={colors.white}/></Pressable>
+  </View>
+  <Modal visible={open} transparent animationType="fade" onRequestClose={()=>setOpen(false)}><View style={styles.backdrop}><View accessibilityViewIsModal style={styles.sheet}>
+   <View style={styles.summaryHeader}><Text accessibilityRole="header" style={styles.summaryTitle}>Resumen del partido</Text><Pressable accessibilityRole="button" accessibilityLabel="Cerrar resumen" onPress={()=>setOpen(false)} style={styles.close}><MaterialCommunityIcons name="close" size={25} color={colors.white}/></Pressable></View>
+   <ScrollView contentContainerStyle={styles.summaryContent}><Text style={styles.summaryMatch}>{team.name} {match.goals_for} – {match.goals_against} {match.opponent}</Text><Text style={styles.date}>{match.played_on} · {palette.label}</Text><Text style={styles.sectionTitle}>ACCIONES DEL PARTIDO</Text>
+    {loading&&<ActivityIndicator color={colors.red}/>}{!!error&&<Text accessibilityRole="alert" style={styles.message}>{error}</Text>}
+    {!loading&&!error&&actions.map(({player,action,count})=><View key={player.slot_id+'-'+action.key} style={styles.event}>
+     <PersonAvatar key={player.photoUrl??player.slot_id} url={player.photoUrl} name={player.player_name}/>
+     <View style={styles.eventCopy}><Text style={styles.playerName}>{player.player_name}</Text><View style={styles.action}><MaterialCommunityIcons name={action.icon} size={20} color={action.color}/><Text style={styles.actionLabel}>{count===1?action.label:action.plural}</Text></View></View>
+     <Text accessibilityLabel={count+' '+action.plural.toLowerCase()} style={[styles.eventCount,{color:action.color}]}>{count}</Text>
+    </View>)}
+    {!loading&&!error&&actions.length===0&&<Text style={styles.message}>No hubo goles, asistencias ni tarjetas registradas.</Text>}
+   </ScrollView>
+  </View></View></Modal>
+ </>;
 }
-
-function InputStep({ mode, setMode, note, setNote, onAnalyze, onBack }: { mode: 'Texto' | 'Audio'; setMode: (value: 'Texto' | 'Audio') => void; note: string; setNote: (value: string) => void; onAnalyze: () => void; onBack: () => void }) {
-  return <>
-    <BackButton onPress={onBack} label="Volver a mis partidos" />
-    <View style={styles.stepHeader}><Text style={styles.stepNumber}>01</Text><View><Text style={styles.stepTitle}>Registrar partido</Text><Text style={styles.stepHint}>Cuéntanos qué ocurrió. La IA preparará una propuesta.</Text></View></View>
-    <View style={styles.toggle}><Pressable onPress={() => setMode('Texto')} style={[styles.toggleItem, mode === 'Texto' && styles.toggleActive]}><MaterialCommunityIcons name="text-box-outline" size={18} color={mode === 'Texto' ? colors.white : colors.muted} /><Text style={[styles.toggleText, mode === 'Texto' && styles.toggleTextActive]}>Texto escrito</Text></Pressable><Pressable onPress={() => setMode('Audio')} style={[styles.toggleItem, mode === 'Audio' && styles.toggleActive]}><MaterialCommunityIcons name="microphone-outline" size={18} color={mode === 'Audio' ? colors.white : colors.muted} /><Text style={[styles.toggleText, mode === 'Audio' && styles.toggleTextActive]}>Audio / voz</Text></Pressable></View>
-    {mode === 'Texto' ? <TextInput multiline value={note} onChangeText={setNote} placeholder="Ej. Juvenil A ha ganado 2-0 contra Cheste..." placeholderTextColor={colors.dim} style={styles.textArea} /> : <View style={styles.audioBox}><View style={styles.audioCircle}><MaterialCommunityIcons name="microphone" size={27} color={colors.white} /></View><Text style={styles.audioTitle}>Mantén pulsado para grabar</Text><Text style={styles.audioHint}>La transcripción aparecerá aquí antes de analizarla.</Text></View>}
-    <Pressable accessibilityRole="button" onPress={onAnalyze} style={styles.primaryButton}><MaterialCommunityIcons name="auto-fix" size={20} color={colors.white} /><Text style={styles.primaryText}>Analizar con IA</Text></Pressable>
-  </>;
-}
-
-function ReviewStep({ events, onRemove, onBack, onConfirm }: { events: MatchEvent[]; onRemove: (id: number) => void; onBack: () => void; onConfirm: () => void }) {
-  return <>
-    <BackButton onPress={onBack} label="Editar entrada" />
-    <View style={styles.stepHeader}><Text style={styles.stepNumber}>02</Text><View><Text style={styles.stepTitle}>Revisa el partido</Text><Text style={styles.stepHint}>Nada se guardará hasta que confirmes.</Text></View></View>
-    <View style={[styles.matchPreview, styles.previewWin]}><View style={styles.previewClub}><MaterialCommunityIcons name="shield-star" size={29} color={colors.redBright} /><Text style={styles.previewTeam}>Juvenil A</Text></View><View style={styles.previewScore}><Text style={styles.previewScoreText}>2 - 0</Text><Text style={styles.previewOutcome}>VICTORIA</Text></View><View style={styles.previewClub}><MaterialCommunityIcons name="shield-outline" size={29} color={colors.muted} /><Text style={styles.previewTeam}>Cheste</Text></View></View>
-    <Text style={styles.sectionTitle}>ANÁLISIS DE IA · {events.length} EVENTOS</Text>
-    <View style={styles.eventList}>{events.map(event => <EventRow key={event.id} event={event} onRemove={() => onRemove(event.id)} />)}</View>
-    <Pressable accessibilityRole="button" onPress={onConfirm} style={styles.primaryButton}><MaterialCommunityIcons name="check-circle-outline" size={20} color={colors.white} /><Text style={styles.primaryText}>Confirmar partido</Text></Pressable>
-  </>;
-}
-
-function EventRow({ event, onRemove }: { event: MatchEvent; onRemove: () => void }) {
-  const icon = event.type === 'Gol' ? 'soccer' : event.type === 'Asistencia' ? 'shoe-cleat' : event.type === 'Amarilla' ? 'card' : 'swap-horizontal';
-  const iconColor = event.type === 'Amarilla' ? '#F5D142' : event.type === 'Cambio' ? '#39E36B' : colors.redBright;
-  return <View style={styles.eventRow}><View style={[styles.eventIcon, { borderColor: iconColor }]}><MaterialCommunityIcons name={icon} size={18} color={iconColor} /></View><View style={styles.eventCopy}><Text style={styles.eventType}>{event.type}</Text><Text style={styles.eventPlayer}>{event.type === 'Cambio' ? `${event.player} sale · ${event.secondary} entra` : event.player}</Text></View><Text style={styles.minute}>{event.minute}</Text><Pressable accessibilityRole="button" accessibilityLabel={`Eliminar ${event.type}`} onPress={onRemove} style={styles.deleteButton}><MaterialCommunityIcons name="close" size={16} color={colors.muted} /></Pressable></View>;
-}
-
-function Confirmed({ onDone }: { onDone: () => void }) {
-  return <View style={styles.confirmed}><View style={styles.successCircle}><MaterialCommunityIcons name="check" size={32} color={colors.white} /></View><Text style={styles.confirmedTitle}>Partido confirmado</Text><Text style={styles.confirmedText}>El partido y sus eventos ya forman parte de tus estadísticas oficiales.</Text><MatchCard round="Jornada 2" date="20 OCT 2026" rival="Cheste" score="2 - 0" outcome="Victoria" tone="win" /><Pressable accessibilityRole="button" onPress={onDone} style={styles.secondaryButton}><Text style={styles.secondaryText}>Volver a mis partidos</Text></Pressable></View>;
-}
-
-function BackButton({ onPress, label }: { onPress: () => void; label: string }) { return <Pressable accessibilityRole="button" onPress={onPress} style={styles.back}><MaterialCommunityIcons name="arrow-left" size={18} color={colors.muted} /><Text style={styles.backText}>{label}</Text></Pressable>; }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 18, paddingBottom: 40 }, headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }, eyebrow: { color: colors.redBright, fontSize: 10, fontWeight: '900', letterSpacing: 1.8 }, title: { color: colors.white, fontSize: 30, fontWeight: '900', marginTop: 5 }, subtitle: { color: colors.muted, fontSize: 12, marginTop: 4 }, headerIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(229,9,27,0.12)', borderWidth: 1, borderColor: 'rgba(229,9,27,0.34)', alignItems: 'center', justifyContent: 'center' }, primaryButton: { minHeight: 52, borderRadius: 14, backgroundColor: colors.red, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 26 }, primaryText: { color: colors.white, fontWeight: '900', fontSize: 14 }, secondaryButton: { minHeight: 48, borderRadius: 13, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 14 }, secondaryText: { color: colors.white, fontWeight: '800' }, sectionTitle: { color: colors.muted, fontSize: 10, fontWeight: '900', letterSpacing: 1.6, marginBottom: 10, marginTop: 8 }, matchCard: { backgroundColor: 'rgba(18,20,23,0.92)', borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, marginBottom: 12 }, matchTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }, round: { color: colors.white, fontWeight: '900', fontSize: 12 }, date: { color: colors.dim, fontSize: 10, fontWeight: '800' }, matchTeams: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, club: { alignItems: 'center', width: 84 }, clubBadge: { width: 46, height: 46, borderRadius: 15, backgroundColor: 'rgba(229,9,27,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(229,9,27,0.28)' }, rivalBadge: { width: 46, height: 46, borderRadius: 15, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }, clubName: { color: colors.white, fontSize: 11, fontWeight: '800', marginTop: 7 }, result: { alignItems: 'center' }, score: { color: colors.white, fontSize: 24, fontWeight: '900' }, outcome: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, marginTop: 5 }, outcome_win: { backgroundColor: 'rgba(34,197,94,0.15)' }, outcome_draw: { backgroundColor: 'rgba(148,163,184,0.18)' }, outcome_loss: { backgroundColor: 'rgba(239,68,68,0.16)' }, outcomeText: { color: colors.white, fontSize: 10, fontWeight: '900' }, matchFooter: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border, marginTop: 14, paddingTop: 11 }, footerText: { flex: 1, color: colors.muted, fontSize: 11 }, footerValue: { color: colors.redBright, fontSize: 11, fontWeight: '900', marginRight: 4 }, back: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 20 }, backText: { color: colors.muted, fontSize: 12, fontWeight: '700' }, stepHeader: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 18 }, stepNumber: { color: colors.redBright, fontSize: 20, fontWeight: '900' }, stepTitle: { color: colors.white, fontSize: 21, fontWeight: '900' }, stepHint: { color: colors.muted, fontSize: 11, marginTop: 3 }, toggle: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 13, padding: 4, marginBottom: 14 }, toggleItem: { flex: 1, minHeight: 42, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }, toggleActive: { backgroundColor: colors.red }, toggleText: { color: colors.muted, fontSize: 12, fontWeight: '800' }, toggleTextActive: { color: colors.white }, textArea: { minHeight: 155, borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, color: colors.white, padding: 16, textAlignVertical: 'top', fontSize: 14, lineHeight: 21, marginBottom: 14 }, audioBox: { minHeight: 205, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }, audioCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', marginBottom: 13 }, audioTitle: { color: colors.white, fontWeight: '900', fontSize: 14 }, audioHint: { color: colors.muted, fontSize: 11, marginTop: 6, textAlign: 'center', paddingHorizontal: 35 }, matchPreview: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 16, padding: 14, marginBottom: 22, borderWidth: 1 }, previewWin: { backgroundColor: 'rgba(34,197,94,0.11)', borderColor: 'rgba(34,197,94,0.55)' }, previewClub: { width: 82, alignItems: 'center', gap: 6 }, previewTeam: { color: colors.white, fontSize: 11, fontWeight: '900', textAlign: 'center' }, previewScore: { alignItems: 'center' }, previewScoreText: { color: colors.white, fontSize: 22, fontWeight: '900' }, previewOutcome: { color: '#4ADE80', fontSize: 9, fontWeight: '900', marginTop: 3 }, eventList: { gap: 8, marginBottom: 18 }, eventRow: { minHeight: 62, backgroundColor: colors.surface, borderRadius: 13, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, gap: 10 }, eventIcon: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, alignItems: 'center', justifyContent: 'center' }, eventCopy: { flex: 1 }, eventType: { color: colors.muted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' }, eventPlayer: { color: colors.white, fontSize: 12, fontWeight: '800', marginTop: 3 }, minute: { color: colors.white, fontSize: 13, fontWeight: '900' }, deleteButton: { padding: 5 }, confirmed: { alignItems: 'stretch' }, successCircle: { alignSelf: 'center', width: 68, height: 68, borderRadius: 34, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center', marginTop: 16 }, confirmedTitle: { color: colors.white, textAlign: 'center', fontSize: 23, fontWeight: '900', marginTop: 15 }, confirmedText: { color: colors.muted, textAlign: 'center', fontSize: 13, lineHeight: 20, marginTop: 7, marginBottom: 20 },
-});
+const styles=StyleSheet.create({event:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:14,borderBottomWidth:1,borderBottomColor:'#35212B'},eventCopy:{flex:1,minWidth:0},eventCount:{fontSize:22,fontWeight:'900',minWidth:28,textAlign:'center'},content:{paddingHorizontal:18,paddingBottom:40},eyebrow:{color:colors.redBright,fontSize:10,fontWeight:'900',letterSpacing:1.8},title:{color:colors.white,fontSize:30,fontWeight:'900',marginTop:5},subtitle:{color:'#D5CAD0',fontSize:12,marginTop:4,marginBottom:22},message:{color:'#DDD1D8',fontSize:13,lineHeight:22,marginVertical:16},teamChoices:{flexDirection:'row',flexWrap:'wrap',gap:8,marginBottom:18},teamChoice:{padding:12,borderRadius:16,borderWidth:1,borderColor:colors.border},teamChoiceSelected:{borderColor:colors.redBright,backgroundColor:'rgba(229,9,27,0.18)'},teamChoiceText:{color:colors.white,fontWeight:'700',fontSize:12},matchCard:{backgroundColor:'rgba(12,14,18,0.94)',borderWidth:1,borderColor:'rgba(255,255,255,0.1)',borderRadius:18,overflow:'hidden',padding:14,marginBottom:12},fill:{position:'absolute',top:0,bottom:0,left:0,right:0},accent:{position:'absolute',left:0,top:22,bottom:22,width:3,borderRadius:2},date:{color:'#E4E4E4',fontSize:10,fontWeight:'700',marginBottom:15,marginTop:8,textAlign:'center'},matchTeams:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},club:{alignItems:'center',width:84},clubName:{color:colors.white,fontSize:11,fontWeight:'800',marginTop:7,textAlign:'center'},result:{alignItems:'center',flex:1},score:{color:colors.white,fontSize:24,fontWeight:'900'},outcome:{fontSize:11,fontWeight:'900',marginTop:7},footer:{flexDirection:'row',alignItems:'center',borderTopWidth:1,borderTopColor:'rgba(255,255,255,0.2)',marginTop:14,paddingTop:12,paddingBottom:4,minHeight:44},summaryLink:{flex:1,color:colors.white,fontSize:13,fontWeight:'900',marginLeft:9},backdrop:{flex:1,backgroundColor:'rgba(0,0,0,0.78)',alignItems:'center',justifyContent:'center',paddingHorizontal:18,paddingVertical:44},sheet:{width:'100%',maxWidth:520,maxHeight:'90%',backgroundColor:'#100D12',borderWidth:1,borderColor:'#69313F',borderTopLeftRadius:26,borderTopRightRadius:8,borderBottomRightRadius:26,borderBottomLeftRadius:8,overflow:'hidden'},summaryHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingLeft:18,paddingRight:8,paddingVertical:10,borderBottomWidth:1,borderBottomColor:'#38232D'},summaryTitle:{color:colors.white,fontSize:19,fontWeight:'900'},close:{width:44,height:44,alignItems:'center',justifyContent:'center'},summaryContent:{padding:18,paddingBottom:28},summaryMatch:{color:colors.white,fontSize:19,fontWeight:'900',textAlign:'center'},sectionTitle:{color:'#DBCBD2',fontSize:10,fontWeight:'900',letterSpacing:1.6,marginBottom:10,marginTop:8},performance:{paddingVertical:16,borderBottomWidth:1,borderBottomColor:'#35212B'},person:{flexDirection:'row',alignItems:'center',gap:12,marginBottom:12},playerName:{color:colors.white,fontSize:14,fontWeight:'800'},playerPosition:{color:'#DACAD1',fontSize:10,marginTop:5},action:{flexDirection:'row',alignItems:'center',gap:10,paddingVertical:6},actionLabel:{flex:1,color:'#E8DCE1',fontSize:12},actionValue:{color:colors.white,fontSize:13,fontWeight:'800'},points:{color:'#FF788A',fontSize:12,fontWeight:'900',marginTop:10}});

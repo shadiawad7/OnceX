@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, ImageBackground, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -45,7 +45,6 @@ const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 const introLogoWidth = Math.min(screenWidth * 0.8, screenHeight * 1.2, 420);
 
 const [backgroundOpacity] = useState(() => new Animated.Value(skipIntro ? 1 : 0));
-
 const [contentOpacity] = useState(() => new Animated.Value(skipIntro ? 1 : 0));
 
 const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
@@ -89,11 +88,11 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
     // Keep the complete outline visible until the original artwork has filled it.
     const logoEntrance = Animated.sequence([
       Animated.parallel([
-        Animated.timing(logoOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 300, useNativeDriver: Platform.OS!=='web' }),
         Animated.timing(drawProgress, { toValue: 1, duration: 1750, easing: Easing.linear, useNativeDriver: false }),
       ]),
-      Animated.timing(originalLogoOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(outlineOpacity, { toValue: 0, duration: 100, useNativeDriver: true }),
+      Animated.timing(originalLogoOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS!=='web' }),
+      Animated.timing(outlineOpacity, { toValue: 0, duration: 100, useNativeDriver: Platform.OS!=='web' }),
       Animated.delay(600),
     ]);
     logoEntrance.start(({ finished }) => { if (finished) setLogoExpanded(true); });
@@ -105,12 +104,12 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
     const entrance = Animated.sequence([
       Animated.delay(150),
       Animated.parallel([
-        Animated.timing(backgroundOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(backgroundOpacity, { toValue: 1, duration: 300, useNativeDriver: Platform.OS!=='web' }),
+        Animated.timing(logoOpacity, { toValue: 0, duration: 300, useNativeDriver: Platform.OS!=='web' }),
       ]),
       Animated.parallel([
-        Animated.timing(contentOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(contentOffset, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 300, useNativeDriver: Platform.OS!=='web' }),
+        Animated.timing(contentOffset, { toValue: 0, duration: 300, useNativeDriver: Platform.OS!=='web' }),
       ]),
     ]);
     entrance.start(({ finished }) => { if (finished) setIntroFinished(true); });
@@ -119,7 +118,7 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
 
   return (
     <View style={styles.background}>
-      <Animated.View style={[styles.backgroundLayer, { opacity: backgroundOpacity }]} pointerEvents="none">
+      <Animated.View style={[styles.backgroundLayer, { opacity: backgroundOpacity, pointerEvents: 'none' }]}>
         <ImageBackground
           source={require('../../assets/login-stadium.png')}
           onLoad={() => setBackgroundReady(true)}
@@ -127,11 +126,11 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
           resizeMode="cover"
           style={styles.background}
         >
-          <View pointerEvents="none" style={styles.shade} />
+          <View style={[styles.shade,{pointerEvents:'none'}]} />
         </ImageBackground>
       </Animated.View>
       {!contentReady && (
-        <Animated.View pointerEvents="none" style={[styles.introLogo, { opacity: logoOpacity }]}>
+        <Animated.View style={[styles.introLogo, { opacity: logoOpacity, pointerEvents:'none' }]}>
           <View style={{width:introLogoWidth,height:introLogoWidth*887/1786}}>
             <Animated.View style={[styles.logoLayer,{opacity:outlineOpacity}]}><DrawnLogo progress={drawProgress} width={introLogoWidth} height={introLogoWidth*887/1786}/></Animated.View>
             <Animated.View style={[styles.logoLayer,{opacity:originalLogoOpacity}]}><Image source={require('../../assets/oncex-logo.png')} resizeMode="contain" accessibilityLabel="Logo ONCEX" onLoad={()=>setOriginalLogoReady(true)} onError={()=>setOriginalLogoReady(true)} style={{width:introLogoWidth,height:introLogoWidth*887/1786}}/></Animated.View>
@@ -139,8 +138,7 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
         </Animated.View>
       )}
       <Animated.View
-        style={[styles.safe, { opacity: contentOpacity, transform: [{ translateY: contentOffset }] }]}
-        pointerEvents={contentReady ? 'auto' : 'none'}
+        style={[styles.safe, { opacity: contentOpacity, pointerEvents: contentReady ? 'auto' : 'none', transform: [{ translateY: contentOffset }] }]}
         accessibilityElementsHidden={!contentReady}
         importantForAccessibility={contentReady ? 'auto' : 'no-hide-descendants'}
       >

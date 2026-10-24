@@ -1,0 +1,4 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),ts=require('typescript'),fs=require('fs'),Module=require('module');
+const m=new Module('matchSeason',module);m._compile(ts.transpileModule(fs.readFileSync('src/lib/matchSeason.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,'matchSeason');const {seasonForMatchDate}=m.exports;
+test('season boundary is based on match date',()=>{assert.equal(seasonForMatchDate('2026-06-30'),'2025/2026');assert.equal(seasonForMatchDate('2026-07-01'),'2026/2027');assert.equal(seasonForMatchDate('2026-10-23'),'2026/2027');assert.equal(seasonForMatchDate('2027-01-01'),'2026/2027');});
+test('invalid dates have no season',()=>{for(const date of ['','2026-02-30','2026-13-01','2026-00-01','23/10/2026'])assert.equal(seasonForMatchDate(date),null);assert.equal(seasonForMatchDate('2028-02-29'),'2027/2028');});

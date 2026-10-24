@@ -109,7 +109,7 @@ export default function AdminManager({ section, initialCreate = false }: { secti
  };
  const header = <View>
   <Text style={styles.title}>{config.title}</Text>
-  {section === 'plans' && <Text style={styles.body}>Catálogo de planes mensuales en EUR. Los planes nuevos se guardan aquí; los accesos de equipos siguen definidos por BASIC y PRO.</Text>}
+  {section === 'plans' && <Text style={styles.body}>ONCEX tiene un único plan de 3,99 € por jugador activo al mes.</Text>}
   {section === 'activity' && <Text style={styles.body}>Altas, modificaciones y bajas desde la activación del registro de actividad.</Text>}
   {section !== 'activity' && <TextInput accessibilityLabel="Buscar por nombre" placeholder="Buscar por nombre" placeholderTextColor={colors.muted} value={search} style={styles.input} onChangeText={value => { setSearch(value);  setLoading(true); }} />}
   {canCreate && !formOpen && <Button label="CREAR" onPress={() => begin(null)} disabled={busy} />}
@@ -132,7 +132,7 @@ export default function AdminManager({ section, initialCreate = false }: { secti
   {loading && <ActivityIndicator color={colors.red} style={styles.loader} />}
   <Text style={styles.body}>{count} registros</Text>
  </View>;
- return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><FlatList ref={listRef} data={loading ? [] : rows} keyExtractor={item => String(item.id)} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" ListHeaderComponent={header} ListEmptyComponent={!loading && !error ? <Text style={styles.body}>No hay registros.</Text> : null} renderItem={({ item }) => section === 'activity'
+ return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><FlatList ref={listRef} data={loading ? [] : rows} keyExtractor={item => String(item.id)} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" ListHeaderComponent={header} ListEmptyComponent={!loading && !error ? <Text style={styles.body}>No hay registros.</Text> : undefined} renderItem={({ item }) => section === 'activity'
   ? <View style={styles.card}><SportCardBackground /><Text style={styles.label}>{actions[item.action ?? '']} · {entities[item.entity ?? ''] ?? item.entity}</Text><Text style={styles.body}>{item.profiles?.full_name || 'Sistema'} · {new Date(item.created_at!).toLocaleString('es-ES')}</Text></View>
   : <Pressable accessibilityRole="button" disabled={busy} onPress={() => section === 'players' ? router.push({pathname:'/players/[id]',params:{id:item.id}}) : begin(item)} style={styles.card}><SportCardBackground /><Text style={styles.label}>{item.name ?? item.full_name ?? 'Sin nombre'}</Text>{section==='plans'&&item.description?.split('\n').map(rule=>rule.trim()).filter(Boolean).map((rule,index)=><Text key={index} style={styles.planRule}>✓ {rule}</Text>)}<Text style={section === 'players' ? styles.playerMeta : styles.body}>{section === 'players' ? playerSubtitle(item) : section === 'clubs' ? item.club_subscriptions?.plans?.name ?? 'Sin plan asignado' : section === 'teams' ? `${item.clubs?.name} · ${item.category}` : section === 'plans' ? `${((item.monthly_price_cents ?? 0) / 100).toFixed(2)} €/mes · ${item.active ? 'Activo' : 'Inactivo'}` : `${item.user_roles?.length ?? 0} asignaciones de rol`}</Text></Pressable>}
   /></KeyboardAvoidingView>;

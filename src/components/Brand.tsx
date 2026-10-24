@@ -2,9 +2,9 @@ import type { ImageStyle, StyleProp } from 'react-native';
 import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 export default function Brand({ style, decorated = true }: { style?: StyleProp<ImageStyle>; decorated?: boolean }) {
- const layout=StyleSheet.flatten<ImageStyle>([styles.brand,style]);
+ const layout:ImageStyle=StyleSheet.flatten([styles.brand,style]) ?? styles.brand;
  return <View style={{width:layout.width,height:layout.height,marginVertical:layout.marginVertical,marginTop:layout.marginTop,marginBottom:layout.marginBottom,alignSelf:layout.alignSelf}}>
-  {decorated && <View pointerEvents="none" accessible={false} style={styles.design}>
+  {decorated && <View accessible={false} style={[styles.design,{pointerEvents:'none'}]}>
    <LinearGradient colors={['rgba(95,15,29,0)','rgba(38,10,17,0.7)','rgba(3,4,6,0.96)','rgba(38,10,17,0.7)','rgba(95,15,29,0)']} locations={[0,0.2,0.5,0.8,1]} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={styles.plate}/>
    <View style={styles.topEdge}/><View style={styles.bottomEdge}/>
    <View style={[styles.slash,styles.leftSlash]}/><View style={[styles.slash,styles.rightSlash]}/>

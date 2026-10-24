@@ -8,7 +8,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!supabase || Platform.OS === 'web') return;
     const auth = supabase.auth;
-    const refresh = (state: string) => {
+    const refresh = (state: string | null | undefined) => {
       if (state === 'active') auth.startAutoRefresh();
       else auth.stopAutoRefresh();
     };

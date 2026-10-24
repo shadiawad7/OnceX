@@ -1,0 +1,7 @@
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { colors } from '../theme/colors';
+export default function ErrorDialog({visible,message,onClose}:{visible:boolean;message:string;onClose:()=>void}){
+ return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}><View style={styles.backdrop}><View accessibilityViewIsModal style={styles.dialog}><MaterialCommunityIcons name="alert-circle-outline" size={36} color={colors.redBright}/><Text accessibilityRole="header" style={styles.title}>Revisa los datos</Text><Text accessibilityRole="alert" style={styles.message}>{message}</Text><Pressable accessibilityRole="button" onPress={onClose} style={styles.button}><Text style={styles.buttonText}>ENTENDIDO</Text></Pressable></View></View></Modal>;
+}
+const styles=StyleSheet.create({backdrop:{flex:1,backgroundColor:'rgba(0,0,0,0.82)',justifyContent:'center',alignItems:'center',padding:24},dialog:{width:'100%',maxWidth:420,backgroundColor:'#171015',borderWidth:1,borderColor:'#8A2A40',borderRadius:24,padding:24},title:{color:colors.white,fontSize:21,fontWeight:'900',marginTop:14},message:{color:'#EEE1E7',fontSize:15,lineHeight:23,marginTop:12},button:{backgroundColor:colors.red,borderRadius:12,padding:15,alignItems:'center',marginTop:24,minHeight:48},buttonText:{color:colors.white,fontWeight:'900',fontSize:13}});
