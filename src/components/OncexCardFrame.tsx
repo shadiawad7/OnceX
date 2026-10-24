@@ -25,7 +25,6 @@ export default function OncexCardFrame(){
    {/* Angular neon red inlays frame the portrait rather than crossing the face. */}
    <Path d="M29 199 V110 L98 60 M331 199 V110 L262 60 M30 248 L48 222 V143 L79 114 M330 248 L312 222 V143 L281 114" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".65"/>
    <Path d="M27 285 L38 270 V374 L27 389 Z M333 285 L322 270 V374 L333 389 Z" fill={'url(#'+id+'neon)'} opacity=".55"/>
-   <Path d="M149 53 H166 L180 42 L194 53 H211 M160 59 H170 L180 51 L190 59 H200" stroke={'url(#'+id+'neon)'} strokeWidth="1"/>
    <Path d="M42 406 H113 L124 414 H236 L247 406 H318 M44 422 H316 M180 437 V520" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".75"/>
    <Path d="M40 474 V509 L81 528 M320 474 V509 L279 528 M52 487 V503 L88 520 M308 487 V503 L272 520" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".65"/>
    <Path d="M132 557 H166 L180 568 L194 557 H228 M165 578 L180 587 L195 578" stroke={'url(#'+id+'neon)'} strokeWidth="1.2"/>
