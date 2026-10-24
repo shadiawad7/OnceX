@@ -50,7 +50,7 @@ export default function OncexCardPopup(player: CardProps) {
       </View>)}</View>
       <Text maxFontSizeMultiplier={1} style={[styles.signature,{fontSize:8*scale}]}>ONCEX</Text>
      </View>
-     <Text style={styles.demoNotice}>{assessment.source==='calculated'?('Valoración relativa de la temporada'+(assessment.reliability==null?'': ' · Fiabilidad '+Math.round(assessment.reliability*100)+'%')):'Sin valoración: faltan participación o jugadores comparables.'}</Text>
+     {assessment.source!=='calculated' && <Text style={styles.demoNotice}>Sin valoración: faltan participación o jugadores comparables.</Text>}
      <View style={styles.legend}>
       {assessment.attributes.map(attribute=><View key={attribute.code} style={styles.legendRow}><Text style={styles.legendCode}>{attribute.code}</Text><Text style={styles.legendLabel}>{attribute.label}</Text></View>)}
      </View>
