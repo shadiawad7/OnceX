@@ -1,3 +1,4 @@
+import { clubPhotoUrls } from '../lib/clubPhotos';
 import { textShadow } from '../theme/textShadow';
 import { loadPlayerEvolution } from '../lib/playerEvolution';
 import { type OncexCardAssessment } from '../lib/oncexCard';
@@ -22,6 +23,7 @@ type Details = { full_name: string; position: string; birth_date: string | null 
 export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRole: string }) {
   const [cardAssessment,setCardAssessment]=useState<OncexCardAssessment|null>(null);
   const [photoVersion,setPhotoVersion]=useState(0);
+  const [cardClubPhoto,setCardClubPhoto]=useState<string>();
   const [details, setDetails] = useState<Details | null>(null);
   const [birth, setBirth] = useState('');
   const [editable, setEditable] = useState(false);
@@ -29,12 +31,13 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
   const [notice, setNotice] = useState('');
   const [jersey,setJersey]=useState('');
   const [score,setScore]=useState<number|null>(null);
-  const [team,setTeam]=useState<{name:string;category:string;clubs:{name:string}|null}|null>(null);
+  const [team,setTeam]=useState<{name:string;category:string;clubs:{name:string;photo_path?:string|null}|null}|null>(null);
 
   useFocusEffect(useCallback(() => {
     let active = true;
     async function load() {
       setCardAssessment(null);
+      setCardClubPhoto(undefined);
       const base = await client().from('profiles').select('full_name').eq('id', id).single();
       if (!active) return;
       if (base.error) { setError(adminError(base.error)); return; }
@@ -51,8 +54,13 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
       if (permission.error) setNotice(adminError(permission.error)); else setEditable(viewerRole!=='player' && permission.data === true);
       const number=await client().from('profiles').select('jersey_number,oncex_score').eq('id',id).single();
       if(active&&!number.error) {setJersey(number.data.jersey_number==null?'':String(number.data.jersey_number));setScore(number.data.oncex_score??null);}
-      const membership=await client().from('team_members').select('teams(name,category,clubs(name))').eq('user_id',id).eq('role_code','player').order('team_id').limit(1).maybeSingle();
-      if(active&&!membership.error&&membership.data?.teams) setTeam(membership.data.teams as unknown as {name:string;category:string;clubs:{name:string}|null});
+      const membership=await client().from('team_members').select('teams(name,category,clubs(name,photo_path))').eq('user_id',id).eq('role_code','player').order('team_id').limit(1).maybeSingle();
+      if(active&&!membership.error&&membership.data?.teams){
+       const currentTeam=membership.data.teams as unknown as {name:string;category:string;clubs:{name:string;photo_path?:string|null}|null};
+       setTeam(currentTeam);
+       const path=currentTeam.clubs?.photo_path;
+       if(path){try{const urls=await clubPhotoUrls([path]);if(active)setCardClubPhoto(urls.get(path));}catch{/* Keep the shield fallback if the club photo cannot load. */}}
+      }
       try {
        const evolution=await loadPlayerEvolution(id);
        const rating=evolution.current;
@@ -76,7 +84,7 @@ export default function PlayerProfile({ id, viewerRole }: { id: string; viewerRo
     </View>
     <View style={styles.scoreCard}><View><Text style={styles.scoreLabel}>ONCEX SCORE</Text><Text style={styles.scoreValue}>{score??0}</Text><Text style={styles.scoreHint}>{score===null?'Pendiente de evaluación':'ONCEX Score'}</Text></View><View style={styles.scoreMark}><Text style={styles.scoreMarkText}>11</Text><Text style={styles.scoreMarkLabel}>PLAYER</Text></View></View>
     <View style={styles.rankCard}><View style={styles.rankGrid}><Rank color="#22C55E" icon="soccer-field" label="POSICIÓN" value={details.position||'Sin definir'} /><Rank icon="tshirt-crew-outline" label="DORSAL" value={jersey||'—'} /><Rank color="#3B82F6" icon="shield-outline" label="EQUIPO" value={team?.clubs?.name??'Sin club asignado'} subtitle={team?.name} /><Rank color="#F6C84C" icon="calendar-account-outline" label="EDAD" value={age===null?'—':`${age} años`} /></View></View>
-    <OncexCardPopup id={id} name={details.full_name} position={details.position} team={team?.name} category={team?.category} jersey={jersey} assessment={cardAssessment??pendingCardAssessment(details.position)} />
+    <OncexCardPopup id={id} name={details.full_name} position={details.position} team={team?.name} category={team?.category} clubName={team?.clubs?.name} clubPhotoUrl={cardClubPhoto} jersey={jersey} assessment={cardAssessment??pendingCardAssessment(details.position)} />
     <Text style={styles.sectionTitle}>ESTADÍSTICAS OFICIALES</Text>
     <PlayerStatsPanel playerId={id} />
     <PlayerEvolution playerId={id}/>

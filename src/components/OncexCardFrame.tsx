@@ -1,23 +1,24 @@
 import { useId } from 'react';
 import Svg, { ClipPath, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
 
-// Original ONCEX silhouette: split shoulders, chamfered sides and a double-cut base.
-const outline = 'M180 8 L214 24 L304 24 L348 66 L348 545 L324 596 L218 634 L180 658 L142 634 L36 596 L12 545 L12 66 L56 24 L146 24 Z';
-export default function OncexCardFrame() {
- const prefix=useId().replace(/:/g,'');
- return <Svg pointerEvents="none" width="100%" height="100%" viewBox="0 0 360 670" fill="none">
+// ONCEX shield: raised centre, curved shoulders and a tapered lower edge.
+const outline='M180 10 C164 27 148 35 131 22 H115 C83 30 54 68 14 83 V509 C14 531 43 537 75 548 L145 574 Q167 583 180 594 Q193 583 215 574 L285 548 C317 537 346 531 346 509 V83 C306 68 277 30 245 22 H229 C212 35 196 27 180 10 Z';
+export default function OncexCardFrame(){
+ const id=useId().replace(/:/g,'');
+ return <Svg width="100%" height="100%" viewBox="0 0 360 600" fill="none" aria-hidden={true}>
   <Defs>
-   <ClipPath id={`${prefix}clip`}><Path d={outline}/></ClipPath>
-   <LinearGradient id={`${prefix}body`} x1="180" y1="0" x2="180" y2="670" gradientUnits="userSpaceOnUse"><Stop stopColor="#701424"/><Stop offset="0.38" stopColor="#17171E"/><Stop offset="0.7" stopColor="#101116"/><Stop offset="1" stopColor="#3D101C"/></LinearGradient>
-   <LinearGradient id={`${prefix}edge`} x1="20" y1="20" x2="340" y2="650" gradientUnits="userSpaceOnUse"><Stop stopColor="#FFACB7"/><Stop offset="0.23" stopColor="#F82F51"/><Stop offset="0.52" stopColor="#6A1729"/><Stop offset="0.8" stopColor="#FF4866"/><Stop offset="1" stopColor="#F5B8C1"/></LinearGradient>
+   <ClipPath id={id+'clip'}><Path d={outline}/></ClipPath>
+   <LinearGradient id={id+'body'} x1="36" y1="80" x2="300" y2="580" gradientUnits="userSpaceOnUse"><Stop stopColor="#742037"/><Stop offset="0.45" stopColor="#361522"/><Stop offset="1" stopColor="#100F18"/></LinearGradient>
+   <LinearGradient id={id+'edge'} x1="10" y1="0" x2="350" y2="600" gradientUnits="userSpaceOnUse"><Stop stopColor="#FF95AC"/><Stop offset="0.45" stopColor="#D82B50"/><Stop offset="1" stopColor="#FF6F90"/></LinearGradient>
   </Defs>
-  <Path d={outline} fill={`url(#${prefix}body)`} stroke={`url(#${prefix}edge)`} strokeWidth="3"/>
-  <G clipPath={`url(#${prefix}clip)`}>
-   <Path d="M-40 230 L232 -30 L294 -30 L-40 292 Z" fill="#FF3857" opacity="0.09"/>
-   <Path d="M158 0 L370 176 L370 228 L116 0 Z" fill="#FF9CAC" opacity="0.06"/>
-   <Path d="M-10 371 L110 445 M370 371 L250 445 M-10 383 L110 457 M370 383 L250 457" stroke="#EF3657" strokeOpacity="0.22"/>
-   <Path d="M28 93 L28 539 L49 582 L146 618 M332 93 L332 539 L311 582 L214 618" stroke="#FF8298" strokeOpacity="0.38"/>
-   <Path d="M112 613 L180 639 L248 613" stroke="#FF4866" strokeWidth="2"/>
+  <Path d={outline} fill={'url(#'+id+'body)'} stroke={'url(#'+id+'edge)'} strokeWidth="3"/>
+  <Path d={outline} transform="translate(10 12) scale(.944 .955)" stroke="#FFD9E2" strokeOpacity="0.8" strokeWidth="1.4"/>
+  <G clipPath={'url(#'+id+'clip)'}>
+   <Path d="M38 90 H107 V369 H38 Z" fill="#080D17" opacity="0.3"/>
+   <Path d="M80 135 L142 135 L283 396 H221 Z M235 135 H297 L157 396 H95 Z" fill="#F98BA5" opacity="0.07"/>
+   <Path d="M-15 223 C67 83 270 69 376 223 M-15 241 C67 101 270 87 376 241 M-10 380 C82 479 277 488 370 378" stroke="#E77892" strokeOpacity="0.13" strokeWidth="3"/>
+   <Path d="M44 422 H316 M180 437 V536" stroke="#F7BFCD" strokeOpacity="0.65" strokeWidth="1"/>
+   <Path d="M159 555 H201" stroke="#FF416B" strokeWidth="2"/>
   </G>
  </Svg>;
 }
