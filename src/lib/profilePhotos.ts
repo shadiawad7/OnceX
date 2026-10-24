@@ -1,10 +1,10 @@
-import { onPlayerPhotoSaved } from './cardPhotos';
+import { onPlayerPhotoSaved, storedCardPhotoUrl } from './cardPhotos';
 import * as ImagePicker from 'expo-image-picker';
 import { decode, encode } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 import { client } from './client';
 export type ProfilePhoto = { uri: string; base64: string; contentType: string };
-export async function chooseProfilePhoto(aspect: [number,number] = [3,4], allowsEditing = true): Promise<ProfilePhoto | null> {
+export async function chooseProfilePhoto(aspect: [number,number] = [3,4], allowsEditing = false): Promise<ProfilePhoto | null> {
  const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing,aspect,quality:allowsEditing?0.65:1,base64:true});
  if(result.canceled) return null;
  const asset=result.assets[0];
@@ -41,5 +41,11 @@ export async function profilePhotoUrls(paths: string[]): Promise<Map<string,stri
  const result=await client().storage.from('profile-photos').createSignedUrls(unique,3600);
  if(result.error) return new Map();
  const version=Date.now();
- return new Map(result.data.filter(item=>!!item.signedUrl&&!!item.path).map(item=>[item.path!,`${item.signedUrl!}&v=${version}`]));
+ const urls=new Map(result.data.filter(item=>!!item.signedUrl&&!!item.path).map(item=>[item.path!,`${item.signedUrl!}&v=${version}`]));
+ // Read stored derivatives only. Displaying a photo must never start processing.
+ await Promise.all(unique.map(async path=>{
+  const match=path.match(/^([0-9a-f-]{36})\/portrait$/i);if(!match)return;
+  const cutout=await storedCardPhotoUrl(match[1]);if(cutout)urls.set(path,cutout);
+ }));
+ return urls;
 }
