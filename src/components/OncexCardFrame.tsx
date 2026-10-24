@@ -1,34 +1,51 @@
 import { useId } from 'react';
-import { colors } from '../theme/colors';
-import Svg, { ClipPath, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, Image as SvgImage, LinearGradient, Path, Stop } from 'react-native-svg';
 
-// ONCEX's own shield silhouette; all decoration stays clipped inside its borders.
+// Intensidad de la textura roja y dorada del fondo: 0–100.
+const CARD_TEXTURE_OPACITY_PERCENT = 100;
+const CARD_BORDER_COLOR = '#FF2438';
 const outline='M180 10 C164 27 148 35 131 22 H115 C83 30 54 68 14 83 V509 C14 531 43 537 75 548 L145 574 Q167 583 180 594 Q193 583 215 574 L285 548 C317 537 346 531 346 509 V83 C306 68 277 30 245 22 H229 C212 35 196 27 180 10 Z';
+
 export default function OncexCardFrame(){
  const id=useId().replace(/:/g,'');
- return <Svg width="100%" height="100%" viewBox="0 0 360 600" fill="none" aria-hidden={true}>
+ return <Svg width="100%" height="100%" viewBox="0 0 360 600" fill="none" aria-hidden>
   <Defs>
    <ClipPath id={id+'clip'}><Path d={outline}/></ClipPath>
-   <LinearGradient id={id+'body'} x1="40" y1="60" x2="300" y2="570" gradientUnits="userSpaceOnUse"><Stop stopColor="#9B1426"/><Stop offset="0.35" stopColor="#590D19"/><Stop offset="0.72" stopColor="#350910"/><Stop offset="1" stopColor="#160407"/></LinearGradient>
-   <LinearGradient id={id+'neon'} x1="20" y1="30" x2="340" y2="570" gradientUnits="userSpaceOnUse"><Stop stopColor={colors.redBright}/><Stop offset="0.22" stopColor={colors.red}/><Stop offset="0.43" stopColor="#FF7884"/><Stop offset="0.64" stopColor={colors.redBright}/><Stop offset="0.83" stopColor={colors.red}/><Stop offset="1" stopColor="#FF7884"/></LinearGradient>
-   <LinearGradient id={id+'rail'} x1="0" y1="0" x2="0" y2="1"><Stop stopColor="#160307" stopOpacity=".62"/><Stop offset=".8" stopColor="#160307" stopOpacity=".38"/><Stop offset="1" stopColor="#160307" stopOpacity="0"/></LinearGradient>
+   <LinearGradient id={id+'body'} x1="0" y1="0" x2="0" y2="1">
+    <Stop stopColor="#3B0B15"/><Stop offset=".4" stopColor="#22060C"/><Stop offset="1" stopColor="#120204"/>
+   </LinearGradient>
+   <LinearGradient id={id+'shade'} x1="0" y1="0" x2="0" y2="1">
+    <Stop offset=".42" stopColor="#140205" stopOpacity="0"/><Stop offset=".7" stopColor="#140205" stopOpacity=".18"/><Stop offset="1" stopColor="#0C0103" stopOpacity=".62"/>
+   </LinearGradient>
+   <LinearGradient id={id+'rail'} x1="0" y1="0" x2="0" y2="1">
+    <Stop stopColor="#230309" stopOpacity=".35"/><Stop offset=".7" stopColor="#230309" stopOpacity=".24"/><Stop offset="1" stopColor="#230309" stopOpacity="0"/>
+   </LinearGradient>
+   <LinearGradient id={id+'rim'} x1="0" y1="0" x2="0" y2="1">
+    <Stop stopColor="#FFF1B8"/><Stop offset=".25" stopColor="#BDA264"/><Stop offset=".5" stopColor="#F2D98C"/><Stop offset=".75" stopColor="#8F794B"/><Stop offset="1" stopColor="#E8D596"/>
+   </LinearGradient>
   </Defs>
-  <Path d={outline} stroke={colors.red} strokeWidth="14" strokeOpacity=".1"/>
-  <Path d={outline} stroke={colors.redBright} strokeWidth="9" strokeOpacity=".2"/>
-  <Path d={outline} fill={'url(#'+id+'body)'} stroke={'url(#'+id+'neon)'} strokeWidth="4"/>
-  <Path d={outline} transform="translate(10 12) scale(.944 .955)" stroke={'url(#'+id+'neon)'} strokeWidth="1.3"/>
+  <Path d={outline} stroke="#FF2438" strokeWidth="12" strokeOpacity=".1"/>
+  <Path d={outline} stroke="#FF2438" strokeWidth="7" strokeOpacity=".35"/>
+  <Path d={outline} fill={'url(#'+id+'body)'} stroke="#34040C" strokeWidth="8"/>
   <G clipPath={'url(#'+id+'clip)'}>
-   {/* Faceted red panels catch the light without masking the real club crest. */}
-   <Path d="M14 83 L115 22 L68 171 L14 247 Z M346 83 L245 22 L292 171 L346 247 Z" fill="#E5091B" opacity=".28"/>
-   <Path d="M14 247 L68 171 L38 400 L14 448 Z M346 247 L292 171 L322 400 L346 448 Z" fill="#870F20" opacity=".4"/>
-   <Path d="M40 0 H116 V402 H40 Z" fill={'url(#'+id+'rail)'}/>
-   {/* Angular neon red inlays frame the portrait rather than crossing the face. */}
-   <Path d="M29 199 V110 L98 60 M331 199 V110 L262 60 M30 248 L48 222 V143 L79 114 M330 248 L312 222 V143 L281 114" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".65"/>
-   <Path d="M27 285 L38 270 V374 L27 389 Z M333 285 L322 270 V374 L333 389 Z" fill={'url(#'+id+'neon)'} opacity=".55"/>
-   <Path d="M42 406 H113 L124 414 H236 L247 406 H318 M44 422 H316 M180 437 V520" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".75"/>
-   <Path d="M40 474 V509 L81 528 M320 474 V509 L279 528 M52 487 V503 L88 520 M308 487 V503 L272 520" stroke={'url(#'+id+'neon)'} strokeWidth="1" opacity=".65"/>
-   <Path d="M132 557 H166 L180 568 L194 557 H228 M165 578 L180 587 L195 578" stroke={'url(#'+id+'neon)'} strokeWidth="1.2"/>
-   <Path d="M180 528 L184 533 L180 538 L176 533 Z" fill={'url(#'+id+'neon)'}/>
+   <SvgImage href={require('../../assets/card-season-texture-red.png')} width="360" height="600" preserveAspectRatio="xMidYMid slice" opacity={Math.min(100,Math.max(0,CARD_TEXTURE_OPACITY_PERCENT))/100}/>
+   <Path d="M0 0 H360 V600 H0 Z" fill={'url(#'+id+'shade)'}/>
+   <Path d="M39 77 L115 48 V361 L39 384 Z" fill={'url(#'+id+'rail)'}/>
+
+  </G>
+  {/* Champagne gold rims and red highlights frame the burgundy artwork. */}
+  <Path d={outline} stroke={'url(#'+id+'rim)'} strokeWidth="3"/>
+  <Path d={outline} transform="translate(7 8) scale(.961 .973)" stroke={'url(#'+id+'rim)'} strokeWidth="1.3"/>
+  <Path d="M7 96 V502 Q7 531 70 553 M353 96 V502 Q353 531 290 553" stroke="#FF4055" strokeWidth="1" opacity=".8"/>
+  <Path d="M54 414 H306 M180 432 V530 M155 548 H205" stroke={CARD_BORDER_COLOR} strokeWidth=".8" opacity=".8"/>
+  {/* Metallic fins extend past the shoulder of the shield, behind the player. */}
+  <G stroke="#D6C38B" strokeWidth=".8">
+   <Path d="M250 84 L255 12 L264 8 L266 67 L282 41 L278 85 L255 132 Z" fill={'url(#'+id+'rim)'}/>
+   <Path d="M255 12 L264 8 L266 67 L255 86 Z" fill="#FFF0AD"/>
+   <Path d="M266 67 L282 41 L278 85 L255 132 L259 91 Z" fill="#685B3F"/>
+   <Path d="M307 137 L327 68 L350 75 L339 109 L322 117 L308 173 L290 193 Z" fill={'url(#'+id+'rim)'}/>
+   <Path d="M327 68 L350 75 L338 81 L319 78 Z" fill="#EAD698"/>
+   <Path d="M319 78 L338 81 L328 106 L307 137 Z" fill="#441321"/>
   </G>
  </Svg>;
 }
