@@ -4,6 +4,16 @@ import { decode, encode } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 import { client } from './client';
 export type ProfilePhoto = { uri: string; base64: string; contentType: string };
+export type CropPhotoSource={uri:string;width:number;height:number};
+/** Selection for the local cropper: do not reject/encode large camera or HEIC
+ * originals before they can be cropped and saved to a bounded PNG. */
+export async function chooseProfilePhotoForCrop():Promise<CropPhotoSource|null>{
+ const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:false,quality:1,base64:false});
+ if(result.canceled)return null;
+ const asset=result.assets[0];
+ if(!asset?.uri)throw new Error('No se ha podido abrir la foto. Selecciona otra imagen.');
+ return{uri:asset.uri,width:asset.width,height:asset.height};
+}
 export async function chooseProfilePhoto(aspect: [number,number] = [3,4], allowsEditing = false): Promise<ProfilePhoto | null> {
  const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing,aspect,quality:allowsEditing?0.65:1,base64:true});
  if(result.canceled) return null;
