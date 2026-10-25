@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ImageBackground, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import ScreenHeader from '../components/ScreenHeader';
-import { SCREEN_BACKGROUND_BLUR } from '../components/ScreenBackground';
+import ScreenBackground from '../components/ScreenBackground';
 import Button from '../components/Button';
 import { colors } from '../theme/colors';
 import { supabase } from '../lib/supabase';
@@ -41,7 +41,7 @@ export default function Register() {
   };
 
   return (
-    <ImageBackground source={require('../../assets/bg_resto.png')} resizeMode="cover" blurRadius={SCREEN_BACKGROUND_BLUR} style={styles.background}>
+    <ScreenBackground>
       <SafeAreaView style={styles.safe}>
         <ScreenHeader fallback="/login" logoStyle={styles.logo} />
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -68,12 +68,11 @@ export default function Register() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ImageBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: colors.background },
   safe: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.45)' },
   flex: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', padding: 22, width: '100%', maxWidth: 480, alignSelf: 'center' },

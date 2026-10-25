@@ -18,16 +18,16 @@ export default function OncexCardAura(){
   <Defs>
    <RadialGradient id={id+'halo'} cx="50%" cy="50%" rx="50%" ry="50%">
     <Stop offset="0" stopColor="#FF2438" stopOpacity="0"/>
-    <Stop offset=".5" stopColor="#E5091B" stopOpacity=".16"/>
-    <Stop offset=".72" stopColor="#FF4055" stopOpacity=".12"/>
+    <Stop offset="0.5" stopColor="#E5091B" stopOpacity="0.16"/>
+    <Stop offset="0.72" stopColor="#FF4055" stopOpacity="0.12"/>
     <Stop offset="1" stopColor="#FF2438" stopOpacity="0"/>
    </RadialGradient>
    {beamColors.map((color,index)=><RadialGradient key={color} id={id+'beam'+index} cx="300" cy="400" rx="450" ry="450" gradientUnits="userSpaceOnUse">
     <Stop offset="0" stopColor={color} stopOpacity="0"/>
-    <Stop offset=".27" stopColor={color} stopOpacity=".3"/>
-    <Stop offset=".48" stopColor={color} stopOpacity="1"/>
-    <Stop offset=".75" stopColor={color} stopOpacity=".75"/>
-    <Stop offset="1" stopColor={color} stopOpacity=".15"/>
+    <Stop offset="0.27" stopColor={color} stopOpacity="0.3"/>
+    <Stop offset="0.48" stopColor={color} stopOpacity="1"/>
+    <Stop offset="0.75" stopColor={color} stopOpacity="0.75"/>
+    <Stop offset="1" stopColor={color} stopOpacity="0.15"/>
    </RadialGradient>)}
   </Defs>
   <G opacity={Math.min(100,Math.max(0,CARD_AURA_INTENSITY_PERCENT))/100}>

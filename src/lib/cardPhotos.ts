@@ -7,7 +7,7 @@ export async function onPlayerPhotoSaved(source:CardPhotoSource):Promise<void>{
  try{
   const uploadId=`${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const result=await client().functions.invoke('card-photo-cutout',{body:{target_user:source.playerId,mode:'process',upload_id:uploadId}});
-  if(!result.error&&['ready','not_player'].includes(result.data?.status))return;
+  if(!result.error&&['ready','not_player','disabled'].includes(result.data?.status))return;
   let code=result.data?.code;
   if(result.error&&'context' in result.error&&result.error.context instanceof Response){try{code=(await result.error.context.json()).code;}catch{/* Keep the generic notice. */}}
   if(code==='PROVIDER_NOT_CONFIGURED')message='La foto original está guardada. Falta configurar el proveedor de recorte en el servidor.';

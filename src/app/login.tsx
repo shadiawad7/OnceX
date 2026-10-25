@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -119,15 +119,18 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
   return (
     <View style={styles.background}>
       <Animated.View style={[styles.backgroundLayer, { opacity: backgroundOpacity, pointerEvents: 'none' }]}>
-        <ImageBackground
+        <View style={styles.background}>
+         <Image
           source={require('../../assets/login-stadium.png')}
           onLoad={() => setBackgroundReady(true)}
           onError={() => setBackgroundReady(true)}
           resizeMode="cover"
-          style={styles.background}
-        >
+          style={StyleSheet.absoluteFill}
+          accessible={false}
+          pointerEvents="none"
+         />
           <View style={[styles.shade,{pointerEvents:'none'}]} />
-        </ImageBackground>
+        </View>
       </Animated.View>
       {!contentReady && (
         <Animated.View style={[styles.introLogo, { opacity: logoOpacity, pointerEvents:'none' }]}>

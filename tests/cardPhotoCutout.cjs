@@ -3,7 +3,7 @@ const code=ts.transpileModule(fs.readFileSync('supabase/functions/card-photo-cut
 function setup(options={}){
  let handler,calls=0,claims=0;const objects=new Map();const source=new Blob(['original'],{type:'image/png'});let current=source;
  const bucket={download:async path=>path.endsWith('/portrait')?{data:current}:objects.has(path)?{data:objects.get(path)}:{error:true},upload:async(path,bytes)=>{if(objects.has(path))return{error:true};objects.set(path,new Blob([bytes]));if(path.endsWith('.claim'))claims++;return{};},createSignedUrl:async path=>({data:{signedUrl:'https://storage.test/'+path}})};
- const query=table=>({select(){return this;},eq(){return this;},maybeSingle:async()=>options.denied?{error:true}:{data:{photo_path:target+'/portrait'}},limit:async()=>({data:options.notPlayer?[]:[{user_id:target}]})});
+ const query=table=>({select(){return this;},eq(){return this;},maybeSingle:async()=>options.denied?{error:true}:{data:{photo_path:target+'/portrait'}},single:async()=>options.settingsError?{error:true}:options.settingsMissing?{data:null}:{data:{background_removal_enabled:options.enabled!==false}},limit:async()=>({data:options.notPlayer?[]:[{user_id:target}]})});
  const client={auth:{getUser:async()=>({data:{user:{id:target}}})},from:query,storage:{from:()=>bucket},rpc:async()=>options.readOnly?{error:true}:{data:null}};
  const provider={backgroundRemovalProvider:()=>({removeBackground:async()=>{calls++;if(options.fail)throw Error();if(options.change)current=new Blob(['new']);return new Uint8Array([137,80,78,71,13,10,26,10]);}})};
  new Function('require','module','exports','Deno','crypto',code)(name=>name==='./provider.ts'?provider:{createClient:()=>client},{exports:{}},{},{env:{get:()=> 'configured'},serve:fn=>{handler=fn;}},webcrypto);
@@ -20,3 +20,9 @@ test('source changed while processing cannot attach stale cutout',async()=>{cons
 test('simultaneous requests share one storage claim',async()=>{const h=setup();await Promise.all([h.run(),h.run()]);assert.equal(h.calls(),1);});
 
 test('new upload can retry failed content; reads still never retry',async()=>{const h=setup({fail:true});await h.run('process','upload-attempt-one');await h.run('read');await h.run('process','upload-attempt-two');assert.equal(h.calls(),2);});
+
+
+test('disabled background removal never calls provider or creates a claim',async()=>{const h=setup({enabled:false});assert.equal((await h.run()).body.status,'disabled');assert.equal(h.calls(),0);assert.equal(h.claims(),0);assert.equal(h.objects.size,0);});
+for(const key of ['settingsError','settingsMissing'])test(key+' fails closed without provider calls',async()=>{const h=setup({[key]:true});assert.equal((await h.run()).body.code,'SETTINGS_UNAVAILABLE');assert.equal(h.calls(),0);assert.equal(h.claims(),0);});
+test('switch can enable subsequent uploads without a failed claim blocking them',async()=>{const options={enabled:false};const h=setup(options);await h.run();options.enabled=true;assert.equal((await h.run()).body.status,'ready');assert.equal(h.calls(),1);});
+test('disabling preserves existing stored cutouts and never reprocesses them',async()=>{const options={enabled:true};const h=setup(options);await h.run();options.enabled=false;assert.equal((await h.run('read')).body.status,'ready');assert.equal((await h.run()).body.status,'ready');assert.equal(h.calls(),1);});

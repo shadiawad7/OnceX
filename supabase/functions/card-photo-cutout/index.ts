@@ -37,6 +37,10 @@ Deno.serve(async request=>{
    if(allowed.error)return reply(403,{error:'No puedes modificar esta foto.'});
    const membership=await admin.from('team_members').select('user_id').eq('user_id',target).eq('role_code','player').limit(1);
    if(membership.error||!membership.data?.length)return reply(200,{status:'not_player',url:null});
+   const settings=await admin.from('photo_processing_settings').select('background_removal_enabled').eq('id',true).single();
+   // Fail closed: an unreadable/missing switch must never cause a paid request.
+   if(settings.error||typeof settings.data?.background_removal_enabled!=='boolean')return reply(200,{status:'failed',code:'SETTINGS_UNAVAILABLE',url:null});
+   if(!settings.data.background_removal_enabled)return reply(200,{status:'disabled',url:null});
    const provider=backgroundRemovalProvider();
    // Storage's unique object key prevents concurrent instances charging twice.
    // A failed/crashed claim is retained: no automatic retries or display-triggered charges.

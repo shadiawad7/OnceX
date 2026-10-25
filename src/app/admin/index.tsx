@@ -8,11 +8,12 @@ import { colors } from '../../theme/colors';
 const sections = [
  {title:'Usuarios',icon:'account-group-outline',caption:'CLUBES → EQUIPOS → ENTRENADORES → JUGADORES',description:'Organiza toda la estructura de ONCEX, crea cuentas y gestiona sus datos.',href:'/clubs',color:'#00FF66'},
  {title:'Planes',icon:'shield-star-outline',caption:'ONCEX · 3,99 €',description:'Un único plan con todas las funciones y licencias por jugador activo.',href:'/admin/team-plans',color:'#FFD43B'},
+ {title:'Configuración',icon:'cog-outline',caption:'AJUSTES DE LA PLATAFORMA',description:'Controla las opciones globales de ONCEX, como la eliminación del fondo de las fotos.',href:'/admin/settings',color:colors.redBright},
 ] as const;
 export default function AdminHome() {
  return <AdminShell><ScrollView contentContainerStyle={styles.content}>
   <Text style={styles.kicker}>CENTRO DE CONTROL</Text><Text style={styles.title}>Administración ONCEX</Text>
-  <Text style={styles.body}>Toda tu plataforma, en dos espacios.</Text>
+  <Text style={styles.body}>Gestiona los usuarios, los planes y la configuración de tu plataforma.</Text>
   {sections.map(section=><Pressable key={section.title} accessibilityRole="button" onPress={()=>router.push(section.href)} style={styles.card}>
    <SportCardBackground/><View style={styles.row}><View style={[styles.icon,{borderColor:section.color}]}><MaterialCommunityIcons name={section.icon} size={30} color={section.color}/></View><MaterialCommunityIcons name="arrow-top-right" size={25} color={colors.white}/></View>
    <Text style={styles.label}>{section.title}</Text><Text style={styles.caption}>{section.caption}</Text><Text style={styles.description}>{section.description}</Text>
