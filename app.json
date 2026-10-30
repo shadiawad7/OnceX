@@ -33,7 +33,15 @@
           "microphonePermission": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "ONCEX necesita el micrófono para dictar el relato de un partido.",
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
     ],
     "scheme": "oncex"
   }

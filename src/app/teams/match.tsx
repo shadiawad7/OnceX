@@ -1,4 +1,7 @@
 import MatchResultsReview from '../../components/MatchResultsReview';
+import AiMatchEntry from '../../components/AiMatchEntry';
+import { type MatchDraft } from '../../lib/aiMatchDraft';
+import { applyDraftAppearances } from '../../lib/matchDraftReview';
 import InputStepGuard from '../../components/InputStepGuard';
 import { matchEntryStepError } from '../../lib/matchEntrySteps';
 import ClubBadge from '../../components/ClubBadge';
@@ -24,6 +27,7 @@ const fields=[{key:'minutes',label:'Minutos'},{key:'goals',label:'Goles'},{key:'
 export default function MatchEditorPage(){const {teamId,matchId}=useLocalSearchParams<{teamId:string;matchId?:string}>();return <AccountShell allowed={['coach','club_admin','super_admin']} fallback={{pathname:'/teams/[id]',params:{id:teamId}}}>{()=> <MatchEditor key={`${teamId}-${matchId??''}`} teamId={teamId} matchId={matchId}/>}</AccountShell>}
 function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
  const [correcting,setCorrecting]=useState(false),[reason,setReason]=useState('');
+ const [aiDraft,setAiDraft]=useState<MatchDraft|null>(null),[aiReport,setAiReport]=useState('');
  const [roster,setRoster]=useState<HierarchyItem[]>([]),[starters,setStarters]=useState<string[]>([]),[subs,setSubs]=useState<string[]>([]);
  const [venue,setVenue]=useState<'home'|'away'|null>(null);
  const [teamName,setTeamName]=useState('');
@@ -51,8 +55,10 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
   if(!venue){setError('Indica si el club juega como local o visitante.');return;}
   if(starters.length!==11){setError('No puedes registrar estadísticas: selecciona los 11 titulares.');return;}
   if(!roster.some(player=>starters.includes(player.id)&&player.position==='Portero')){setError('Los 11 titulares deben incluir al menos un portero.');return;}
+  if(aiDraft?.players.some(player=>!player.player_id||![...starters,...subs].includes(player.player_id))){setError('Hay jugadores del borrador de IA sin incluir en la alineación. Márcalos como titulares o suplentes, o elimina sus entradas en el borrador.');return;}
+  if(!Number.isInteger(+duration)||+duration<1||+duration>150){setError('Completa la duración del partido, entre 1 y 150 minutos.');return;}
   if(!opponent.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(date)){setError('Completa el rival y elige la fecha del partido.');return;}
-  setBusy(true);setError('');try{const result=await client().rpc('save_match_lineup_v2',{match_venue:venue,target_team:teamId,target_match:savedId??null,opponent_name:opponent.trim(),match_date:date,match_duration:+duration,starter_ids:starters,substitute_ids:subs});if(result.error)throw result.error;const id=result.data as string;setSavedId(id);const data=await loadMatchSummary(id);setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setStage('stats');}catch(reason){setError(matchError(reason));}finally{setBusy(false);}
+  setBusy(true);setError('');try{const result=await client().rpc('save_match_lineup_v2',{match_venue:venue,target_team:teamId,target_match:savedId??null,opponent_name:opponent.trim(),match_date:date,match_duration:+duration,starter_ids:starters,substitute_ids:subs});if(result.error)throw result.error;const id=result.data as string;setSavedId(id);const data=await loadMatchSummary(id);setMatch(data.match);setVenue(data.match.venue??null);setPlayers(applyDraftAppearances(data.players,aiDraft));setAiDraft(null);setStage('stats');}catch(reason){setError(matchError(reason));}finally{setBusy(false);}
  }
  function concededFor(player:MatchPlayer):number|null{
   return concededDuringAppearance(player.minutes,+duration,/^\d+$/.test(goalsAgainst)?+goalsAgainst:null,player.conceded_while_playing);
@@ -98,6 +104,10 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
  if(loading)return <ActivityIndicator color={colors.red}/>;
  return <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
   <Text style={styles.title}>{stage==='lineup'?'Alineación inicial':readOnly?'Partido confirmado':'Actuaciones del partido'}</Text>
+  {!savedId&&<AiMatchEntry teamId={teamId} roster={roster} disabled={busy||confirm} onApply={(draft,report)=>{
+   setAiDraft(draft);setAiReport(report);setOpponent(draft.opponent??'');setDate(draft.played_on??'');setDuration(draft.duration===null?'':String(draft.duration));setVenue(draft.venue);setGoalsFor(draft.goals_for===null?'':String(draft.goals_for));setGoalsAgainst(draft.goals_against===null?'':String(draft.goals_against));setStarters(draft.players.filter(p=>p.starter===true&&p.player_id).map(p=>p.player_id!));setSubs(draft.players.filter(p=>p.starter===false&&p.player_id).map(p=>p.player_id!));setError('');
+  }}/>}
+  {!!aiReport&&<View style={styles.card}><Text style={styles.name}>Borrador generado por IA — revisa antes de confirmar</Text><Text selectable style={styles.text}>{aiReport}</Text><Text style={styles.text}>Comprueba las cifras y completa los datos pendientes. Solo se oficializará al confirmar el acta.</Text></View>}
   <MatchResultsReview visible={confirm} players={players.map(player=>({...player,oncex_points:previewPoints(player),clean_sheet:readOnly?player.clean_sheet:previewBreakdown(player)?.cleanSheet??null,points_breakdown:readOnly?player.points_breakdown:previewBreakdown(player)}))} subtitle={venue==='away'?`${opponent} ${goalsAgainst} – ${goalsFor} ${teamName}`:`${teamName} ${goalsFor} – ${goalsAgainst} ${opponent}`} readOnly={readOnly} busy={busy} onClose={()=>setConfirm(false)} onEdit={()=>{void editResults();}} onConfirm={()=>{void finalize();}}/>
   <ErrorDialog visible={errorVisible} message={error} onClose={()=>setErrorVisible(false)}/>
   <View style={styles.stepHeading}><Text style={styles.stepNumber}>1</Text><View style={{flex:1}}><Text style={styles.stepTitle}>Condición del partido</Text><Text style={styles.stepHint}>{venue?'Puedes cambiar la selección antes de confirmar.':'Selecciona una opción para continuar · obligatorio'}</Text></View></View>
@@ -105,6 +115,7 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
   {stage==='lineup'?<InputStepGuard message={matchEntryStepError(venue,goalsFor,goalsAgainst,'details')} onAttempt={setError}>
    <Text style={styles.label}>Rival</Text><TextInput accessibilityLabel="Rival" value={opponent} onChangeText={setOpponent} maxLength={120} editable={!busy} style={styles.input}/>
    <Text style={styles.label}>Fecha del partido</Text><MatchDateCalendar value={date} onChange={setDate} disabled={busy}/>
+   <Text style={styles.label}>Duración (minutos)</Text><TextInput accessibilityLabel="Duración del partido" value={duration} onChangeText={value=>{if(/^\d*$/.test(value))setDuration(value);}} keyboardType="number-pad" maxLength={3} editable={!busy} style={styles.input}/>
    <Text style={styles.counter}>{starters.length} / 11 TITULARES</Text><Text style={styles.text}>Porteros titulares: {roster.filter(player=>starters.includes(player.id)&&player.position==='Portero').length} · Mínimo 1</Text><Text style={styles.text}>Elige también los suplentes que hayan participado. Sin los 11 titulares no podrás registrar estadísticas.</Text>
    {roster.length<11&&<Text style={styles.error}>Este equipo tiene menos de 11 jugadores registrados. Completa su plantilla antes de continuar.</Text>}
    {roster.map(player=><View key={player.id} style={styles.card}><SportCardBackground/><View style={styles.person}><PersonAvatar key={player.photoUrl??player.id} name={player.name} url={player.photoUrl}/><View style={{flex:1}}><Text style={styles.name}>{player.name}</Text><Text style={styles.text}>{player.position||'Posición sin definir'}</Text></View></View><View style={styles.buttons}><Pressable accessibilityRole="checkbox" accessibilityState={{checked:starters.includes(player.id)}} disabled={busy} onPress={()=>toggleStarter(player.id)} style={[styles.choice,starters.includes(player.id)&&styles.selected]}><Text style={styles.choiceText}>Titular</Text></Pressable><Pressable accessibilityRole="checkbox" accessibilityState={{checked:subs.includes(player.id)}} disabled={busy} onPress={()=>{setStarters(starters.filter(p=>p!==player.id));setSubs(subs.includes(player.id)?subs.filter(p=>p!==player.id):[...subs,player.id]);}} style={[styles.choice,subs.includes(player.id)&&styles.selected]}><Text style={styles.choiceText}>Suplente</Text></Pressable></View></View>)}

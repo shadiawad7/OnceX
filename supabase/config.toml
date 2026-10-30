@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.card-photo-cutout]
 verify_jwt = false
+
+[functions.ai-match-draft]
+verify_jwt = false
