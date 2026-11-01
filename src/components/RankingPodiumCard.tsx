@@ -38,7 +38,8 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
     <G clipPath={`url(#${id}clip)`}>
      <Path d="M0 0 H180 V320 H0 Z" fill={`url(#${id}wash)`}/>
      <Path d="M14 112 L125 25 L98 64 L165 34 L75 123 L156 80 L118 132 L20 182 Z" fill={shades[1]} opacity={0.1*opacity}/>
-     <Path d="M-20 42 L82 -12 L200 270 L100 320 Z" fill={`url(#${id}shine)`} opacity={0.9}/>
+     <Path d="M-20 42 L82 -12 L200 270 L100 320 Z" fill={`url(#${id}shine)`} opacity={1}/>
+     <Path d="M8 182 L104 62 L170 96 L52 226 Z" fill="#FFFFFF" opacity={0.09*opacity}/>
      <Path d="M-8 205 L122 45 L180 85 L38 268 Z" fill={shades[0]} opacity={0.055*opacity}/>
      <Path d="M18 108 L109 43 M25 124 L89 77 M22 145 L137 58 M20 252 L92 190 L78 278 L129 228 L152 287" stroke={shades[0]} strokeWidth="0.7" opacity={0.16*opacity}/>
      <Path d="M116 66 L139 24 L134 84 L160 64 L143 118 L112 148 L129 101 Z" fill={`url(#${id}rim)`} opacity={0.3*opacity}/>
@@ -51,12 +52,14 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
    </Svg>
   </View>
   <View style={[styles.placeBadge,{borderColor:shades[1],backgroundColor:shades[2]}]}><View style={[styles.placeBadgeInner,{borderColor:shades[0]+'80'}]}><Text maxFontSizeMultiplier={1} style={[styles.place,{color:shades[0]}]}>{place}</Text></View></View>
+  <View style={styles.score}><Text style={styles.scoreLabel}>ONCEX</Text><Text style={[styles.scoreValue,{color:shades[0]}]}>{player?.oncex_score??'—'}</Text></View>
   <MaterialCommunityIcons pointerEvents="none" name="shield-star" size={235} color={shades[0]} style={styles.watermark}/>
   <View style={styles.photo}><ProfilePortrait key={player?.photo_url??player?.player_id??'empty'} url={player?.photo_url} name={player?.full_name??''} style={styles.portrait} alignTop/></View>
   <NameGradient colors={['transparent',shades[2]+'D9','#191A23']} locations={[0,0.6,1]} style={[styles.nameBand,{borderBottomColor:shades[1]}]}>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} maxFontSizeMultiplier={1} style={styles.name}>{player?.full_name?.trim().split(/\s+/)[0]?.toLocaleUpperCase('es')||'Pendiente'}</Text>
   </NameGradient>
   <View style={styles.identity}><Text style={[styles.brand,{color:shades[0]}]}>ONCEX</Text><Text numberOfLines={1} style={styles.team}>{player?.team_name??'Sin jugador'}</Text><Text numberOfLines={1} style={[styles.position,{color:shades[0]}]}>{player?.player_position??''}</Text></View>
+  <View style={styles.stats}><View><Text style={styles.statLabel}>PJ</Text><Text style={styles.statValue}>{player?'8':'—'}</Text></View><View><Text style={styles.statLabel}>MIN</Text><Text style={styles.statValue}>{player?'620':'—'}</Text></View><View><Text style={styles.statLabel}>GOL</Text><Text style={styles.statValue}>{player?'6':'—'}</Text></View><View><Text style={styles.statLabel}>ASI</Text><Text style={styles.statValue}>{player?'3':'—'}</Text></View></View>
  </Pressable>
  </View>;
 }
@@ -66,13 +69,15 @@ const styles=StyleSheet.create({
  placeBadge:{position:'absolute',zIndex:10,top:'7%',left:'10%',width:48,height:48,borderRadius:24,borderWidth:2,alignItems:'center',justifyContent:'center'},
  placeBadgeInner:{width:35,height:35,borderRadius:18,borderWidth:1,alignItems:'center',justifyContent:'center'},
  place:{fontSize:25,lineHeight:30,fontWeight:'900',textAlign:'center'},
+ score:{position:'absolute',zIndex:8,top:'20%',right:'10%',alignItems:'flex-start'},scoreLabel:{color:'#FFFFFF',fontSize:9,fontWeight:'900',letterSpacing:1},scoreValue:{fontSize:28,lineHeight:31,fontWeight:'900'},
  watermark:{position:'absolute',zIndex:1,top:'17%',alignSelf:'center',opacity:0.1},
  photo:{position:'absolute',zIndex:2,top:'20%',bottom:'25%',left:'4%',right:'4%',overflow:'hidden'},
  portrait:{width:'108%',height:'108%',marginLeft:'-4%',marginTop:'-2%',backgroundColor:'transparent'},
- nameBand:{position:'absolute',left:'7%',right:'7%',bottom:'24%',height:82,justifyContent:'flex-end',paddingHorizontal:6,paddingBottom:10,borderBottomWidth:1},
+ nameBand:{position:'absolute',left:'7%',right:'7%',bottom:'29%',height:58,justifyContent:'flex-end',paddingHorizontal:6,paddingBottom:10,borderBottomWidth:1},
  name:{color:'#FFFFFF',fontSize:25,lineHeight:30,fontWeight:'900',letterSpacing:1.2,textAlign:'center'},
- identity:{position:'absolute',top:'78%',left:'9%',right:'9%',alignItems:'center',paddingTop:5},
+ identity:{position:'absolute',top:'70%',left:'9%',right:'9%',alignItems:'center',paddingTop:5},
  brand:{fontSize:10,fontWeight:'900',letterSpacing:2.5,marginBottom:5},
  team:{color:'#E0DBE4',fontSize:12,lineHeight:16,fontWeight:'600',textAlign:'center'},
  position:{fontSize:10,lineHeight:14,fontWeight:'700',textAlign:'center',marginTop:4},
+ stats:{position:'absolute',zIndex:8,left:'9%',right:'9%',bottom:'5%',height:45,flexDirection:'row',justifyContent:'space-around',alignItems:'center',borderTopWidth:1,borderTopColor:'rgba(255,255,255,.28)'},statLabel:{color:'#FFFFFF',fontSize:8,fontWeight:'800',textAlign:'center'},statValue:{color:'#FFFFFF',fontSize:14,fontWeight:'900',textAlign:'center',marginTop:2},
 });
