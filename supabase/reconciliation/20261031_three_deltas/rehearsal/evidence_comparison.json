@@ -1,0 +1,11 @@
+{
+  "roles": true,
+  "permissions": true,
+  "role_permissions": true,
+  "ovr_models": true,
+  "ovr_category_mapping": true,
+  "match_scoring_weights": true,
+  "photo_processing_settings": true,
+  "cron_jobs": true,
+  "protected_configuration_unchanged": true
+}

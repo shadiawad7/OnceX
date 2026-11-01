@@ -1,6 +1,7 @@
+import MatchParticipationReview from '../../components/MatchParticipationReview';
+import { participationFingerprint } from '../../lib/matchParticipation';
 import MatchResultsReview from '../../components/MatchResultsReview';
 import AiMatchEntry from '../../components/AiMatchEntry';
-import { type MatchDraft } from '../../lib/aiMatchDraft';
 import { applyDraftAppearances } from '../../lib/matchDraftReview';
 import InputStepGuard from '../../components/InputStepGuard';
 import { matchEntryStepError } from '../../lib/matchEntrySteps';
@@ -24,20 +25,25 @@ import { listPages } from '../../lib/listPages';
 import { loadMatchSummary, matchError, pointBreakdownLabel, type MatchPlayer, type TeamMatch } from '../../lib/matches';
 import { colors } from '../../theme/colors';
 const fields=[{key:'minutes',label:'Minutos'},{key:'goals',label:'Goles'},{key:'own_goals',label:'Goles en propia'},{key:'assists',label:'Asistencias'},{key:'yellow_cards',label:'Amarillas'},{key:'red_cards',label:'Rojas'},{key:'conceded_while_playing',label:'Goles encajados en juego'}] as const;
-export default function MatchEditorPage(){const {teamId,matchId}=useLocalSearchParams<{teamId:string;matchId?:string}>();return <AccountShell allowed={['coach','club_admin','super_admin']} fallback={{pathname:'/teams/[id]',params:{id:teamId}}}>{()=> <MatchEditor key={`${teamId}-${matchId??''}`} teamId={teamId} matchId={matchId}/>}</AccountShell>}
-function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
+export default function MatchEditorPage(){const {teamId,matchId,edit}=useLocalSearchParams<{teamId:string;matchId?:string;edit?:string}>();return <AccountShell allowed={['coach','club_admin','super_admin']} fallback={{pathname:'/teams/[id]',params:{id:teamId}}}>{()=> <MatchEditor key={`${teamId}-${matchId??''}-${edit??''}`} teamId={teamId} matchId={matchId} editRequested={edit==='1'}/>}</AccountShell>}
+function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId?:string;editRequested?:boolean}){
+ const [participationReview,setParticipationReview]=useState<string|null>(null),[scoringReady,setScoringReady]=useState(false);
  const [correcting,setCorrecting]=useState(false),[reason,setReason]=useState('');
- const [aiDraft,setAiDraft]=useState<MatchDraft|null>(null),[aiReport,setAiReport]=useState('');
+ const [aiReport,setAiReport]=useState('');
  const [roster,setRoster]=useState<HierarchyItem[]>([]),[starters,setStarters]=useState<string[]>([]),[subs,setSubs]=useState<string[]>([]);
  const [venue,setVenue]=useState<'home'|'away'|null>(null);
  const [teamName,setTeamName]=useState('');
  const [clubBadgeUrl,setClubBadgeUrl]=useState<string>();
- const [opponent,setOpponent]=useState(''),[date,setDate]=useState(''),[duration,setDuration]=useState('90');
+ const [opponent,setOpponent]=useState(''),[date,setDate]=useState('');
  const [savedId,setSavedId]=useState(matchId),[stage,setStage]=useState<'lineup'|'stats'>('lineup'),[players,setPlayers]=useState<MatchPlayer[]>([]);
  const [match,setMatch]=useState<TeamMatch|null>(null),[goalsFor,setGoalsFor]=useState(''),[goalsAgainst,setGoalsAgainst]=useState('');
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false); 
  const [error,setErrorMessage]=useState(''),[errorVisible,setErrorVisible]=useState(false);
  const setError=useCallback((message:string)=>{setErrorMessage(message);setErrorVisible(!!message);},[]);
+ // New matches always last 90 minutes; existing actas retain their saved duration.
+ const duration=String(match?.duration??90);
+ const participationKey=participationFingerprint(players,+duration,goalsAgainst);
+ const participationVerified=participationReview===participationKey;
  const season=seasonForMatchDate(date);
 
  useEffect(()=>{let active=true;void (async()=>{
@@ -46,26 +52,27 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
   const people=await listPages(page=>listTeamPeople(teamId,['player'],page,''),()=>active);
   const data=matchId?await loadMatchSummary(matchId):null;
   if(!active)return;
+  const rule=await client().rpc('match_clean_sheet_minimum');if(!active)return;setScoringReady(!rule.error&&rule.data===60);
   setRoster(people.items);
-  if(data){if(data.match.team_id!==teamId)throw new Error('Este partido pertenece a otro equipo.');setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setOpponent(data.match.opponent);setDate(data.match.played_on);setDuration(String(data.match.duration));setStarters(data.players.filter(p=>p.starter&&p.player_id).map(p=>p.player_id!));setSubs(data.players.filter(p=>!p.starter&&p.player_id).map(p=>p.player_id!));setGoalsFor(data.match.goals_for==null?'':String(data.match.goals_for));setGoalsAgainst(data.match.goals_against==null?'':String(data.match.goals_against));setStage('stats');}
- })().catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[teamId,matchId,setError]);
+  if(data){if(data.match.team_id!==teamId)throw new Error('Este partido pertenece a otro equipo.');setCorrecting(editRequested&&data.match.status==='confirmed');setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setOpponent(data.match.opponent);setDate(data.match.played_on);setStarters(data.players.filter(p=>p.starter&&p.player_id).map(p=>p.player_id!));setSubs(data.players.filter(p=>!p.starter&&p.player_id).map(p=>p.player_id!));setGoalsFor(data.match.goals_for==null?'':String(data.match.goals_for));setGoalsAgainst(data.match.goals_against==null?'':String(data.match.goals_against));setStage('stats');}
+ })().catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[teamId,matchId,editRequested,setError]);
  function toggleStarter(id:string){setError('');if(starters.includes(id))setStarters(starters.filter(p=>p!==id));else if(starters.length<11){setStarters([...starters,id]);setSubs(subs.filter(p=>p!==id));}else setError('Ya hay 11 titulares. Quita uno antes de elegir otro.');}
  async function saveLineup(){
   if(busy)return;
   if(!venue){setError('Indica si el club juega como local o visitante.');return;}
   if(starters.length!==11){setError('No puedes registrar estadísticas: selecciona los 11 titulares.');return;}
   if(!roster.some(player=>starters.includes(player.id)&&player.position==='Portero')){setError('Los 11 titulares deben incluir al menos un portero.');return;}
-  if(aiDraft?.players.some(player=>!player.player_id||![...starters,...subs].includes(player.player_id))){setError('Hay jugadores del borrador de IA sin incluir en la alineación. Márcalos como titulares o suplentes, o elimina sus entradas en el borrador.');return;}
-  if(!Number.isInteger(+duration)||+duration<1||+duration>150){setError('Completa la duración del partido, entre 1 y 150 minutos.');return;}
   if(!opponent.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(date)){setError('Completa el rival y elige la fecha del partido.');return;}
-  setBusy(true);setError('');try{const result=await client().rpc('save_match_lineup_v2',{match_venue:venue,target_team:teamId,target_match:savedId??null,opponent_name:opponent.trim(),match_date:date,match_duration:+duration,starter_ids:starters,substitute_ids:subs});if(result.error)throw result.error;const id=result.data as string;setSavedId(id);const data=await loadMatchSummary(id);setMatch(data.match);setVenue(data.match.venue??null);setPlayers(applyDraftAppearances(data.players,aiDraft));setAiDraft(null);setStage('stats');}catch(reason){setError(matchError(reason));}finally{setBusy(false);}
+  setBusy(true);setError('');try{const result=await client().rpc('save_match_lineup_v2',{match_venue:venue,target_team:teamId,target_match:savedId??null,opponent_name:opponent.trim(),match_date:date,match_duration:+duration,starter_ids:starters,substitute_ids:subs});if(result.error)throw result.error;const id=result.data as string;setSavedId(id);const data=await loadMatchSummary(id);setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setAiReport('');setStage('stats');}catch(reason){setError(matchError(reason));}finally{setBusy(false);}
  }
  function concededFor(player:MatchPlayer):number|null{
+  if(!readOnly&&+goalsAgainst>0&&!participationVerified&&player.minutes!==0&&player.minutes!==+duration)return null;
   return concededDuringAppearance(player.minutes,+duration,/^\d+$/.test(goalsAgainst)?+goalsAgainst:null,player.conceded_while_playing);
  }
  function validate(){
   const stepError=matchEntryStepError(venue,goalsFor,goalsAgainst,'statistics');
   if(stepError)return stepError;
+  if(+goalsAgainst>0&&!participationVerified)return 'Verifica primero los minutos de los goles encajados y los cambios.';
   if(!season)return 'Elige una fecha válida para el partido.';
   if(!players.some(p=>p.starter&&p.player_position==='Portero'))return 'Los 11 titulares deben incluir al menos un portero.';
   if(players.filter(p=>p.starter).length!==11)return 'Faltan los 11 titulares.';
@@ -76,7 +83,7 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
   return '';
  }
 
- async function finalize(){if(busy||!confirm||!savedId)return;const issue=validate();if(issue){setError(issue);setConfirm(false);return;}setBusy(true);setError('');try{const result=await client().rpc('confirm_match_statistics_v3',{match_venue:venue,target_match:savedId,expected_revision:match?.revision??0,match_season:season,correction_reason:correcting?(reason.trim()?'Revisión: '+reason.trim():'Revisión de resultados por el entrenador'):null,team_goals:+goalsFor,opponent_goals:+goalsAgainst,performances:players.map(player=>({slot_id:player.slot_id,minutes:player.minutes,goals:player.goals,own_goals:player.own_goals,assists:player.assists,yellow_cards:player.yellow_cards,red_cards:player.red_cards,conceded_while_playing:concededFor(player)}))});if(result.error)throw result.error;setConfirm(false);setCorrecting(false);router.dismissTo({pathname:'/teams/[id]',params:{id:teamId,section:'matches'}});}catch(reason){setConfirm(false);setError(matchError(reason));}finally{setBusy(false);}}
+ async function finalize(){if(busy||!confirm||!savedId)return;if(!scoringReady){setError('La regla de portería a cero de 60 minutos aún no está activada en el servidor. No se puede confirmar el acta hasta actualizarla.');setConfirm(false);return;}const issue=validate();if(issue){setError(issue);setConfirm(false);return;}setBusy(true);setError('');try{const result=await client().rpc('confirm_match_statistics_v3',{match_venue:venue,target_match:savedId,expected_revision:match?.revision??0,match_season:season,correction_reason:correcting?(reason.trim()?'Revisión: '+reason.trim():'Revisión de resultados por el entrenador'):null,team_goals:+goalsFor,opponent_goals:+goalsAgainst,performances:players.map(player=>({slot_id:player.slot_id,minutes:player.minutes,goals:player.goals,own_goals:player.own_goals,assists:player.assists,yellow_cards:player.yellow_cards,red_cards:player.red_cards,conceded_while_playing:concededFor(player)}))});if(result.error)throw result.error;setConfirm(false);setCorrecting(false);router.dismissTo({pathname:'/teams/[id]',params:{id:teamId,section:'matches'}});}catch(reason){setConfirm(false);setError(matchError(reason));}finally{setBusy(false);}}
  const readOnly=match?.status==='confirmed'&&!correcting;
  async function editResults(){
   if(busy)return;
@@ -88,7 +95,7 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
     setVenue(data.match.venue??null);
     setGoalsFor(data.match.goals_for==null?'':String(data.match.goals_for));
     setGoalsAgainst(data.match.goals_against==null?'':String(data.match.goals_against));
-    setOpponent(data.match.opponent);setDate(data.match.played_on);setDuration(String(data.match.duration));
+    setOpponent(data.match.opponent);setDate(data.match.played_on);
     setCorrecting(true);
    }catch(error){setConfirm(false);setError(matchError(error));return;}
    finally{setBusy(false);}
@@ -103,10 +110,7 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
  function previewPoints(player:MatchPlayer):number|null{return readOnly?player.oncex_points??null:previewBreakdown(player)?.total??null;}
  if(loading)return <ActivityIndicator color={colors.red}/>;
  return <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-  <Text style={styles.title}>{stage==='lineup'?'Alineación inicial':readOnly?'Partido confirmado':'Actuaciones del partido'}</Text>
-  {!savedId&&<AiMatchEntry teamId={teamId} roster={roster} disabled={busy||confirm} onApply={(draft,report)=>{
-   setAiDraft(draft);setAiReport(report);setOpponent(draft.opponent??'');setDate(draft.played_on??'');setDuration(draft.duration===null?'':String(draft.duration));setVenue(draft.venue);setGoalsFor(draft.goals_for===null?'':String(draft.goals_for));setGoalsAgainst(draft.goals_against===null?'':String(draft.goals_against));setStarters(draft.players.filter(p=>p.starter===true&&p.player_id).map(p=>p.player_id!));setSubs(draft.players.filter(p=>p.starter===false&&p.player_id).map(p=>p.player_id!));setError('');
-  }}/>}
+  <Text style={styles.title}>{stage==='lineup'?'Alineación inicial':correcting?'Corregir acta':readOnly?'Partido confirmado':'Actuaciones del partido'}</Text>
   {!!aiReport&&<View style={styles.card}><Text style={styles.name}>Borrador generado por IA — revisa antes de confirmar</Text><Text selectable style={styles.text}>{aiReport}</Text><Text style={styles.text}>Comprueba las cifras y completa los datos pendientes. Solo se oficializará al confirmar el acta.</Text></View>}
   <MatchResultsReview visible={confirm} players={players.map(player=>({...player,oncex_points:previewPoints(player),clean_sheet:readOnly?player.clean_sheet:previewBreakdown(player)?.cleanSheet??null,points_breakdown:readOnly?player.points_breakdown:previewBreakdown(player)}))} subtitle={venue==='away'?`${opponent} ${goalsAgainst} – ${goalsFor} ${teamName}`:`${teamName} ${goalsFor} – ${goalsAgainst} ${opponent}`} readOnly={readOnly} busy={busy} onClose={()=>setConfirm(false)} onEdit={()=>{void editResults();}} onConfirm={()=>{void finalize();}}/>
   <ErrorDialog visible={errorVisible} message={error} onClose={()=>setErrorVisible(false)}/>
@@ -115,13 +119,19 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
   {stage==='lineup'?<InputStepGuard message={matchEntryStepError(venue,goalsFor,goalsAgainst,'details')} onAttempt={setError}>
    <Text style={styles.label}>Rival</Text><TextInput accessibilityLabel="Rival" value={opponent} onChangeText={setOpponent} maxLength={120} editable={!busy} style={styles.input}/>
    <Text style={styles.label}>Fecha del partido</Text><MatchDateCalendar value={date} onChange={setDate} disabled={busy}/>
-   <Text style={styles.label}>Duración (minutos)</Text><TextInput accessibilityLabel="Duración del partido" value={duration} onChangeText={value=>{if(/^\d*$/.test(value))setDuration(value);}} keyboardType="number-pad" maxLength={3} editable={!busy} style={styles.input}/>
    <Text style={styles.counter}>{starters.length} / 11 TITULARES</Text><Text style={styles.text}>Porteros titulares: {roster.filter(player=>starters.includes(player.id)&&player.position==='Portero').length} · Mínimo 1</Text><Text style={styles.text}>Elige también los suplentes que hayan participado. Sin los 11 titulares no podrás registrar estadísticas.</Text>
    {roster.length<11&&<Text style={styles.error}>Este equipo tiene menos de 11 jugadores registrados. Completa su plantilla antes de continuar.</Text>}
    {roster.map(player=><View key={player.id} style={styles.card}><SportCardBackground/><View style={styles.person}><PersonAvatar key={player.photoUrl??player.id} name={player.name} url={player.photoUrl}/><View style={{flex:1}}><Text style={styles.name}>{player.name}</Text><Text style={styles.text}>{player.position||'Posición sin definir'}</Text></View></View><View style={styles.buttons}><Pressable accessibilityRole="checkbox" accessibilityState={{checked:starters.includes(player.id)}} disabled={busy} onPress={()=>toggleStarter(player.id)} style={[styles.choice,starters.includes(player.id)&&styles.selected]}><Text style={styles.choiceText}>Titular</Text></Pressable><Pressable accessibilityRole="checkbox" accessibilityState={{checked:subs.includes(player.id)}} disabled={busy} onPress={()=>{setStarters(starters.filter(p=>p!==player.id));setSubs(subs.includes(player.id)?subs.filter(p=>p!==player.id):[...subs,player.id]);}} style={[styles.choice,subs.includes(player.id)&&styles.selected]}><Text style={styles.choiceText}>Suplente</Text></Pressable></View></View>)}
    <Button label={busy?'GUARDANDO…':'GUARDAR 11 Y REGISTRAR ESTADÍSTICAS'} disabled={busy} onPress={()=>{void saveLineup();}}/>
   </InputStepGuard>:<>
    <Text style={styles.text}>vs {opponent} · {date} · {duration} min</Text>
+   {savedId&&!readOnly&&!correcting&&<AiMatchEntry key={savedId} teamId={teamId} roster={roster} lineup={players} matchDetails={{opponent,played_on:date,duration:+duration,venue}} disabled={busy||confirm} onApply={(draft,report)=>{
+    const reviewed=applyDraftAppearances(players,draft);
+    setPlayers(reviewed);setAiReport(report);setParticipationReview(null);
+    if(draft.goals_for!==null)setGoalsFor(String(draft.goals_for));
+    if(draft.goals_against!==null)setGoalsAgainst(String(draft.goals_against));
+    setError('');
+   }}/>}
    {readOnly&&<Button secondary label="CORREGIR DATOS OFICIALES" disabled={busy} onPress={()=>{void editResults();}}/>}
    {correcting&&<><Text style={styles.label}>Motivo de la corrección (opcional)</Text><TextInput accessibilityLabel="Motivo de la corrección" value={reason} onChangeText={setReason} editable={!busy&&!confirm} multiline maxLength={1000} style={styles.input}/></>}
    <InputStepGuard message={readOnly?'':matchEntryStepError(venue,goalsFor,goalsAgainst,'result')} onAttempt={setError}><View style={styles.scoreboard}>
@@ -141,10 +151,11 @@ function MatchEditor({teamId,matchId}:{teamId:string;matchId?:string}){
      </View>
     </View>
    </View></InputStepGuard>
+   {!readOnly&&/^\d+$/.test(goalsAgainst)&&+goalsAgainst<=99&&<MatchParticipationReview key={savedId} players={players} duration={+duration} opponentGoals={+goalsAgainst} disabled={busy||confirm} verified={participationVerified} onInvalidate={()=>setParticipationReview(null)} onVerified={reviewed=>{setPlayers(reviewed);setParticipationReview(participationFingerprint(reviewed,+duration,goalsAgainst));setError('');}}/>}
    <View style={styles.stepHeading}><Text style={styles.stepNumber}>3</Text><View style={{flex:1}}><Text style={styles.stepTitle}>Estadísticas de los jugadores</Text><Text style={styles.stepHint}>Completa primero la condición y el resultado del partido.</Text></View></View>
    <InputStepGuard message={readOnly?'':matchEntryStepError(venue,goalsFor,goalsAgainst,'statistics')} onAttempt={setError}>
    {!readOnly&&<><View style={styles.noChanges}><Button secondary label="SIN CAMBIOS · TITULARES JUGARON TODO" disabled={busy||confirm} onPress={()=>setPlayers(players.map(p=>({...p,minutes:p.starter?+duration:0,conceded_while_playing:p.starter&&/^\d+$/.test(goalsAgainst)?+goalsAgainst:p.starter?null:0})))}/></View></>}
-   {players.map(player=><View key={player.slot_id} style={styles.card}><SportCardBackground/><View style={styles.person}><PersonAvatar key={player.photoUrl??player.slot_id} name={player.player_name} url={player.photoUrl}/><View style={{flex:1}}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.text}>{player.starter?'Titular':'Suplente'} · {player.player_position||'Posición sin definir'}</Text></View></View><View style={styles.fields}>{fields.map(field=><View key={field.key} style={styles.field}><Text style={styles.fieldLabel}>{field.label}</Text><TextInput accessibilityLabel={`${field.label} de ${player.player_name}`} value={field.key==='conceded_while_playing'?String((readOnly?player.conceded_while_playing:concededFor(player))??''):player[field.key]==null?'':String(player[field.key])} keyboardType="number-pad" editable={!busy&&!readOnly&&!confirm&&(field.key!=='conceded_while_playing'||(player.minutes!==0&&player.minutes!==+duration&&goalsAgainst!=='0'))} onChangeText={text=>{if(!/^\d*$/.test(text))return;setPlayers(players.map(p=>p.slot_id===player.slot_id?{...p,...(field.key==='minutes'?{conceded_while_playing:null}:{}),[field.key]:text===''?(field.key==='minutes'||field.key==='conceded_while_playing'?null:0):Number(text)}:p));}} style={styles.input}/></View>)}<View style={styles.field}><Text style={styles.fieldLabel}>Puntos ONCEX del partido{readOnly?'':' · provisional'}</Text><View style={[styles.input,styles.livePoints]}><Text accessibilityLiveRegion="polite" accessibilityLabel={`Total de puntos del partido de ${player.player_name}: ${previewPoints(player)??'pendiente de completar datos'}`} style={styles.livePointsValue}>{previewPoints(player)??'—'}</Text></View></View></View>{!readOnly&&previewBreakdown(player)&&<Text style={styles.text}>{pointBreakdownLabel({...player,points_breakdown:previewBreakdown(player)})}</Text>}{!readOnly&&!previewBreakdown(player)&&<Text style={styles.text}>Define la posición del jugador para calcular sus puntos.</Text>}{readOnly&&<Text style={styles.text}>{pointBreakdownLabel(player)}</Text>}{readOnly&&<Text style={styles.text}>Portería a cero: {player.clean_sheet===null?'Sin evaluar':player.clean_sheet?'Sí':'No'}{player.oncex_points==null?'':` · ${player.oncex_points} puntos`}</Text>}</View>)}
+   {players.map(player=><View key={player.slot_id} style={styles.card}><SportCardBackground/><View style={styles.person}><PersonAvatar key={player.photoUrl??player.slot_id} name={player.player_name} url={player.photoUrl}/><View style={{flex:1}}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.text}>{player.starter?'Titular':'Suplente'} · {player.player_position||'Posición sin definir'}</Text></View></View><View style={styles.fields}>{fields.map(field=><View key={field.key} style={styles.field}><Text style={styles.fieldLabel}>{field.label}</Text><TextInput accessibilityLabel={`${field.label} de ${player.player_name}`} value={field.key==='conceded_while_playing'?String((readOnly?player.conceded_while_playing:concededFor(player))??''):player[field.key]==null?'':String(player[field.key])} keyboardType="number-pad" editable={!busy&&!readOnly&&!confirm&&field.key!=='conceded_while_playing'} onChangeText={text=>{if(!/^\d*$/.test(text))return;setPlayers(players.map(p=>p.slot_id===player.slot_id?{...p,...(field.key==='minutes'?{conceded_while_playing:null}:{}),[field.key]:text===''?(field.key==='minutes'||field.key==='conceded_while_playing'?null:0):Number(text)}:p));}} style={styles.input}/></View>)}<View style={styles.field}><Text style={styles.fieldLabel}>Puntos ONCEX del partido{readOnly?'':' · provisional'}</Text><View style={[styles.input,styles.livePoints]}><Text accessibilityLiveRegion="polite" accessibilityLabel={`Total de puntos del partido de ${player.player_name}: ${previewPoints(player)??'pendiente de completar datos'}`} style={styles.livePointsValue}>{previewPoints(player)??'—'}</Text></View></View></View>{!readOnly&&previewBreakdown(player)&&<Text style={styles.text}>{pointBreakdownLabel({...player,points_breakdown:previewBreakdown(player)})}</Text>}{!readOnly&&!previewBreakdown(player)&&<Text style={styles.text}>Define la posición del jugador para calcular sus puntos.</Text>}{readOnly&&<Text style={styles.text}>{pointBreakdownLabel(player)}</Text>}{readOnly&&<Text style={styles.text}>Portería a cero: {player.clean_sheet===null?'Sin evaluar':player.clean_sheet?'Sí':'No'}{player.oncex_points==null?'':` · ${player.oncex_points} puntos`}</Text>}</View>)}
    </InputStepGuard>
    {readOnly&&<Button secondary label="RESULTADOS →" disabled={busy} onPress={()=>setConfirm(true)}/>}
    {correcting&&<Button secondary label="CANCELAR CORRECCIÓN" disabled={busy} onPress={()=>{if(savedId)void loadMatchSummary(savedId).then(data=>{setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setGoalsFor(String(data.match.goals_for??''));setGoalsAgainst(String(data.match.goals_against??''));setCorrecting(false);setConfirm(false);setReason('');}).catch(reason=>setError(matchError(reason)));}}/>}

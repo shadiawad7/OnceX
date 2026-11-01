@@ -1,0 +1,67 @@
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE FUNCTION
+CREATE TABLE
+CREATE TABLE
+ALTER TABLE
+GRANT
+GRANT
+ALTER DEFAULT PRIVILEGES
+ALTER DEFAULT PRIVILEGES
+ALTER DEFAULT PRIVILEGES
+CREATE SCHEMA
+CREATE TABLE
+
+202610100001_users_roles.sql
+202610100002_super_admin.sql
+202610100003_hierarchy_accounts.sql
+202610100004_coach_manages_team.sql
+202610100005_player_position.sql
+202610100006_player_details.sql
+202610100007_player_rankings.sql
+202610110001_disable_manual_score.sql
+202610110002_profile_photos.sql
+202610110003_player_registration.sql
+202610120001_coach_account_creation.sql
+202610120002_club_photos.sql
+202610120003_team_plans.sql
+202610140001_team_plan_access.sql
+202610140002_coach_names.sql
+202610170001_admin_hierarchy_delete.sql
+202610180001_coach_team_plans.sql
+202610180002_scheduled_team_plans.sql
+202610180003_team_plan_cron.sql
+202610200001_match_lineups.sql
+202610210001_oncex_single_plan.sql
+202610210002_match_scoring_v2.sql
+202610210003_ovr_monthly_history.sql
+202610220001_unique_team_jerseys.sql
+202610220002_live_jerseys_goalkeeper.sql
+202610230001_match_result_consistency.sql
+202610230002_away_win_bonus.sql
+202610230003_card_calculation.sql
+202610230004_card_first_appearance.sql
+202610230005_card_any_cohort.sql
+202610230006_card_singleton_reference.sql
+202610230007_card_official_points_v2.sql
+202610230008_card_accumulated_impact.sql
+202610250001_photo_background_removal_setting.sql
+202610300001_ai_match_drafts.sql
+TEST admin_hierarchy_delete.sql
+Traceback (most recent call last):
+  File "/private/tmp/oncex-ai-final-sql.py", line 27, in <module>
+    print('TEST',f.name,flush=True);print(sql(f.read_text()),flush=True)
+                                          ~~~^^^^^^^^^^^^^^^
+  File "/private/tmp/oncex-ai-final-sql.py", line 6, in sql
+    if p.returncode: raise RuntimeError(p.stderr)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: ERROR:  La cuenta necesita un email para conservar su identidad.
+CONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE
+SQL statement "SELECT private.ensure_player_identity(new.user_id)"
+PL/pgSQL function private.register_player_identity() line 3 at PERFORM
+

@@ -2,19 +2,21 @@
 
 ## Encaje con la arquitectura existente
 
-El acceso está en Equipo → Partidos → Nuevo partido → **Asistente IA · Preparar partido**. El entrenador puede dictar un audio grabado o escribir un relato. Ambos terminan en el mismo borrador en memoria y en el mismo editor existente. No hay otra tabla de partidos, otro registro de jugadores ni otro sistema de puntuación.
+El acceso está en Equipo → Partidos → Nuevo partido → completar datos y guardar alineación → **Asistente IA · Completar estadísticas**. El asistente aparece después de guardar los 11 titulares (incluido un portero) y los suplentes del partido; no se muestra antes de la alineación ni en actas oficiales en modo lectura/corrección. El entrenador puede dictar un audio grabado o escribir un relato. Ambos terminan en el mismo borrador en memoria y en el mismo editor existente. No hay otra tabla de partidos, otro registro de jugadores ni otro sistema de puntuación.
+
+Actualización del flujo (1 de noviembre de 2026): primero se guarda la alineación como borrador; después se genera/revisa la IA. La IA no sustituye rival, fecha, duración ni titulares, y una actuación ajena a los slots guardados debe corregirse/eliminarse o requerirá modificar antes la alineación. Solo la confirmación final oficializa estadísticas. Este cambio de interfaz no necesita migración ni despliegue de Edge Function.
 
 Se revisaron `team_matches`, `match_players`, `save_match_lineup_v2`, `confirm_match_statistics_v3`, `matchStatisticsError`, `matchEntryStepError`, `concededDuringAppearance`, las migraciones de resultado/temporada, ONCEX Points y Card/OVR. La confirmación existente sigue siendo la única escritura de estadísticas oficiales de este flujo. Conserva revisión, permisos, comprobación de plantilla, coherencia del resultado y recálculos actuales.
 
 Flujo:
 
 1. «Dictar partido» permite grabar hasta 120 segundos; «Escribir partido» permite introducir hasta 12.000 caracteres. No hay llamadas al abrir la pantalla ni al editar campos.
-2. Al terminar la grabación, enviarla al backend autenticado con el ID del equipo: `gpt-transcribe` devuelve una transcripción y, a continuación, se ejecuta una interpretación. El relato escrito pasa directamente a interpretación. Una grabación genera como máximo una llamada de transcripción y una de interpretación, sin reintentos automáticos.
+2. Al terminar la grabación, enviarla al backend autenticado con el ID del equipo: `gpt-transcribe` devuelve una transcripción y, a continuación, se ejecuta una interpretación. El relato escrito pasa a interpretación solo si gana una reserva nueva. Una reserva nueva genera como máximo una llamada de transcripción y una de interpretación, sin reintentos automáticos. Las repeticiones del mismo contenido, usuario y equipo reutilizan el resultado temporal o devuelven 409 si siguen en curso; no vuelven a consumir cuota ni a llamar a OpenAI.
 3. GPT-5 mini genera un borrador mediante Structured Outputs (`strict:true`, `additionalProperties:false`), validado tanto en servidor como en móvil.
 4. Revisar rival, fecha, duración, condición, resultado y actuaciones. Corregir, añadir o eliminar entradas. Los nombres ambiguos, apodos o coincidencias fonéticas exigen selección explícita de la plantilla.
 5. Confirmar expresamente las acciones no mencionadas como cero o rellenarlas. Los minutos, titulares y goles encajados nunca se rellenan por esa opción.
-6. «Revisado · Pasar a alineación» lleva los datos al formulario existente. Completar los **11 titulares, al menos un portero**, y los suplentes participantes. Una mención del borrador no puede quedar fuera de la alineación silenciosamente.
-7. Guardar la alineación mediante `save_match_lineup_v2` crea únicamente el borrador ya existente. Las cifras interpretadas se conservan en memoria y se vinculan a los `slot_id` devueltos por el servidor.
+6. «Revisado · Aplicar estadísticas» lleva marcador y actuaciones al formulario existente, manteniendo los datos del partido y la alineación guardados. Los **11 titulares, al menos un portero**, y los suplentes participantes ya deben estar guardados. Una mención del borrador no puede quedar fuera de esa alineación silenciosamente.
+7. La alineación ya se guardó mediante `save_match_lineup_v2` como borrador. Las cifras revisadas se vinculan en memoria a los `slot_id` existentes, sin cambiar los titulares ni crear otra alineación.
 8. Revisar el acta y pulsar su confirmación final: `confirm_match_statistics_v3` valida y oficializa las estadísticas. El backend calcula puntos, clean sheet, evolución y Card/OVR con sus reglas vigentes.
 
 No se promete poder confirmar un relato de solo tres jugadores: el modelo actual exige el XI completo. No se infieren titulares ni participación de quienes no fueron mencionados. El entrenador completa esos datos en el editor habitual.
@@ -31,15 +33,15 @@ El esquema verifica estructura, tipos y pertenencia; las advertencias determinis
 
 ## Backend y privacidad
 
-Una sola Edge Function, `ai-match-draft`, verifica el token con `auth.getUser`. Usa un cliente con el JWT del usuario, sin service-role, y llama al RPC `ai_match_context`. Este reutiliza `private.can_manage_match_team`: leer un equipo no concede permiso para preparar sus partidos.
+Una sola Edge Function, `ai-match-draft`, verifica el token con `auth.getUser`. Usa el JWT del usuario para reservar mediante `ai_match_request_start`; este comprueba la autorización y solo para una reserva nueva llama a `ai_match_context`. Un segundo cliente de servidor usa `SUPABASE_SERVICE_ROLE_KEY` exclusivamente para finalizar esa reserva con `ai_match_request_finish`; el móvil no puede escribir resultados ni recibe esa clave. Este reutiliza `private.can_manage_match_team`: leer un equipo no concede permiso para preparar sus partidos.
 
 El adaptador `supabase/functions/ai-match-draft/provider.ts` implementa `MatchAIProvider` (transcripción e interpretación). Está separado de permisos, validación y persistencia; cambiar de proveedor requiere implementar esa interfaz, no rehacer el sistema de partidos.
 
 El RPC devuelve exclusivamente ID y nombre de los jugadores del equipo. No se consultan DNI, teléfonos, emails, direcciones, fecha de nacimiento, fotos ni historial médico. No se acepta una plantilla enviada por el cliente. Evita incluir esa información en el propio relato: se envía el relato necesario al proveedor.
 
-La función no inserta ni confirma partidos. Su única escritura es un contador privado y atómico de solicitudes: **30 por usuario y hora**. No registra prompts ni respuestas. OpenAI Responses recibe `store:false`. Esto no sustituye las condiciones de retención del proveedor ni representa una promesa de Zero Data Retention.
+La función no inserta ni confirma partidos. Sus únicas escrituras son operativas: un contador privado y atómico de **30 reservas nuevas por usuario y hora**, y reservas/resultados temporales de deduplicación en `private.ai_match_requests`. Una misma reserva solo incrementa la cuota una vez. El resultado (incluida la transcripción de voz) se puede recuperar durante 24 horas; una tarea horaria elimina su contenido al expirar y borra la reserva después de 48 horas. El borrado físico puede esperar hasta la siguiente ejecución del job, pero el RPC deja de devolver resultados a las 24 horas. No hay recuperación automática de una reserva abandonada: se prioriza evitar repetir una llamada pagada incierta. Tras eliminar la reserva a las 48 horas, un envío igual es una operación nueva. No escribe prompts ni respuestas en logs. OpenAI Responses recibe `store:false`. Esto no sustituye las condiciones de retención del proveedor ni representa una promesa de Zero Data Retention.
 
-La función acepta texto JSON o audio multipart de hasta 10 MB. Valida el tipo y la cabecera del audio. No hay transcripción en tiempo real. La transcripción se devuelve junto al borrador y queda visible/editable; si la interpretación falla después de transcribir, se conserva el texto para continuar manualmente. Los audios no se almacenan en Supabase; se graban en caché local y se intenta eliminarlos tras procesarlos o descartarlos. Una salida incompleta, rechazo, error de proveedor o respuesta no validable no genera estadísticas. No hay reintentos de pago automáticos. El formulario manual sigue disponible.
+La función acepta texto JSON o audio multipart de hasta 10 MB. Valida el tipo y la cabecera del audio. No hay transcripción en tiempo real. La transcripción se devuelve junto al borrador y queda visible/editable, y se conserva temporalmente en la caché privada de deduplicación; si la interpretación falla después de transcribir, se conserva el texto para continuar manualmente. Los audios no se almacenan en Supabase; se graban en caché local y se intenta eliminarlos tras procesarlos o descartarlos. Una salida incompleta, rechazo, error de proveedor o respuesta no validable no genera estadísticas. No hay reintentos de pago automáticos. El formulario manual sigue disponible.
 
 ## Activación
 
@@ -51,7 +53,7 @@ Configurar **solo como secretos de Supabase Edge Functions**:
 - `OPENAI_MATCH_MODEL` (opcional, valor inicial `gpt-5-mini`). Debe admitir Responses y Structured Outputs estrictos.
 - `OPENAI_TRANSCRIPTION_MODEL` (opcional, valor inicial `gpt-transcribe`).
 
-`SUPABASE_URL` y `SUPABASE_ANON_KEY` los proporciona el entorno de Edge Functions. No usar `EXPO_PUBLIC_OPENAI_API_KEY`.
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` los proporciona el entorno de Edge Functions. Esta última queda exclusivamente en backend y solo se utiliza para publicar el resultado de la reserva. No usar `EXPO_PUBLIC_OPENAI_API_KEY`.
 
 Ejemplo de despliegue, una vez seleccionado el proyecto correcto:
 
@@ -96,3 +98,11 @@ npx tsc --noEmit
 7. Completar minutos y goles encajados pendientes. Pulsar **RESULTADOS →**, revisar el acta habitual y solo entonces **CONFIRMAR Y GUARDAR PARTIDO**. Esta acción usa `confirm_match_statistics_v3`, igual que el registro manual.
 
 Referencias oficiales consultadas: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), [GPT-5 mini](https://developers.openai.com/api/docs/models/gpt-5-mini), [transcripción de archivos](https://developers.openai.com/api/docs/guides/speech-to-text), [expo-audio SDK 58](https://docs.expo.dev/versions/v58.0.0/sdk/audio/).
+
+
+## Actualización: idempotencia antes de producción
+
+La revisión de idempotencia sustituye el estado histórico de pruebas de esta entrega. Ver `docs/ai-match-idempotency-results-20261031.md` para resultados, límites y lista de fallos históricos contrastados sin IA. La migración pendiente `202610300001_ai_match_drafts.sql` ha cambiado; revisar su SQL actualizado y repetir el dry-run autorizado antes de aplicarla. No se ha desplegado ni modificado producción.
+
+
+Revisión de permisos de Supabase alojado: `docs/ai-match-hosted-cron-fix-20261031.md`. El job de limpieza ahora es sin nombre y su ID se registra en `private.ai_match_cleanup_job`; no se usa LOCK ni escritura directa sobre cron.job.

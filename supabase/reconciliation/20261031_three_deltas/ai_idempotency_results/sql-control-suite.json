@@ -1,0 +1,147 @@
+[
+  {
+    "test": "admin_hierarchy_delete.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "away_win_bonus.sql",
+    "exit": 0,
+    "error": null
+  },
+  {
+    "test": "card_accumulated_impact.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (c0ed887e-cf19-4085-8c66-4b9aff58f8ac, a3000000-0000-0000-0000-000000000002, null, null, 2026-10-31 17:54:29.417839+00).\n"
+  },
+  {
+    "test": "card_any_cohort.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (56a1f4b3-2408-4ea3-bddd-21fe96112d5d, a3000000-0000-0000-0000-000000000001, null, null, 2026-10-31 17:54:29.791987+00).\n"
+  },
+  {
+    "test": "card_calculation.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (8daefb4a-053a-4ac0-a892-eb21932731d6, a3000000-0000-0000-0000-000000000001, null, null, 2026-10-31 17:54:30.333168+00).\n"
+  },
+  {
+    "test": "card_first_appearance.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (49b2e60b-76a5-4a55-8bf2-0e99b53dfdae, a3000000-0000-0000-0000-000000000001, null, null, 2026-10-31 17:54:30.969716+00).\n"
+  },
+  {
+    "test": "card_official_points_v2.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (80879520-08c9-4566-839f-b6880e2f6d39, a3000000-0000-0000-0000-000000000001, null, null, 2026-10-31 17:54:31.45229+00).\n"
+  },
+  {
+    "test": "card_singleton_reference.sql",
+    "exit": 3,
+    "error": "ERROR:  null value in column \"recovery_email\" of relation \"player_identities\" violates not-null constraint\nDETAIL:  Failing row contains (0c285132-c0b7-4c29-9fe9-7300d48478ee, a3000000-0000-0000-0000-000000000001, null, null, 2026-10-31 17:54:31.963353+00).\n"
+  },
+  {
+    "test": "club_photos.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "coach_account_creation.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "coach_names.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "coach_team_plans.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "hierarchy_accounts.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\nSQL statement \"insert into public.team_members(team_id,club_id,user_id,role_code,coach_id) values(saved_team,saved_club,new_user,assigned_role,case when kind='player' then assigned_coach else null end)\"\nPL/pgSQL function public.provision_account(uuid,uuid,text,text,uuid,uuid,text,uuid) line 41 at SQL statement\n"
+  },
+  {
+    "test": "live_jerseys_goalkeeper.sql",
+    "exit": 3,
+    "error": "ERROR:  No puedes consultar los dorsales de este equipo.\nCONTEXT:  PL/pgSQL function public.team_jersey_available(uuid,integer,uuid) line 5 at RAISE\nSQL statement \"SELECT public.team_jersey_available(target_team,1,excluded_player)\"\nPL/pgSQL function public.team_jersey_numbers(uuid,uuid) line 3 at PERFORM\nPL/pgSQL function inline_code_block line 2 at IF\n"
+  },
+  {
+    "test": "match_lineups.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "match_result_consistency.sql",
+    "exit": 3,
+    "error": "ERROR:  permission denied for function save_match_lineup\nCONTEXT:  PL/pgSQL function inline_code_block line 3 at assignment\n"
+  },
+  {
+    "test": "match_scoring_v2.sql",
+    "exit": 3,
+    "error": "ERROR:  permission denied for function save_match_lineup\nCONTEXT:  PL/pgSQL function inline_code_block line 3 at assignment\n"
+  },
+  {
+    "test": "oncex_single_plan.sql",
+    "exit": 0,
+    "error": null
+  },
+  {
+    "test": "ovr_monthly_history.sql",
+    "exit": 3,
+    "error": "ERROR:  Missing model fabricated a rating/history\nCONTEXT:  PL/pgSQL function inline_code_block line 3 at RAISE\n"
+  },
+  {
+    "test": "photo_processing_settings.sql",
+    "exit": 0,
+    "error": null
+  },
+  {
+    "test": "player_rankings.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "player_registration.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "profile_photos.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "scheduled_team_plans.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "super_admin.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "team_plan_access.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "team_plans.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  },
+  {
+    "test": "unique_team_jerseys.sql",
+    "exit": 0,
+    "error": null
+  },
+  {
+    "test": "users_roles.sql",
+    "exit": 3,
+    "error": "ERROR:  La cuenta necesita un email para conservar su identidad.\nCONTEXT:  PL/pgSQL function private.ensure_player_identity(uuid) line 7 at RAISE\nSQL statement \"SELECT private.ensure_player_identity(new.user_id)\"\nPL/pgSQL function private.register_player_identity() line 3 at PERFORM\n"
+  }
+]

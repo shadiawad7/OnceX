@@ -1,0 +1,3 @@
+OPTIONS 200 ok
+POST 401 {"error":"Inicia sesión para preparar el partido."}
+GET 405 {"error":"Método no permitido."}

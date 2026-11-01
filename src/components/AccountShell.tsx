@@ -11,7 +11,7 @@ import useAccountAccess from '../hooks/useAccountAccess';
 import { type AccountAccess, type RoleCode } from '../lib/access';
 import { client } from '../lib/hierarchy';
 import { colors } from '../theme/colors';
-export default function AccountShell({ children, allowed, fallback = '/home' }: { children: (account: AccountAccess) => ReactNode; allowed?: RoleCode[]; fallback?: Href }) {
+export default function AccountShell({ children, allowed, fallback = '/home', onBack }: { children: (account: AccountAccess) => ReactNode; allowed?: RoleCode[]; fallback?: Href; onBack?: () => void }) {
  const [signingOut,setSigningOut]=useState(false);
  const [logoutError,setLogoutError]=useState('');
  async function signOut() {
@@ -27,7 +27,7 @@ export default function AccountShell({ children, allowed, fallback = '/home' }: 
  const { account, error, retry } = useAccountAccess();
  const logoutButton=<Pressable style={{minHeight:44,justifyContent:'center'}} accessibilityRole="button" accessibilityState={{disabled:signingOut,busy:signingOut}} disabled={signingOut} onPress={()=> {void signOut();}}><Text style={styles.logout}>{signingOut?'Cerrando sesión…':'Cerrar sesión'}</Text></Pressable>;
  if (account && allowed && !allowed.includes(account.primaryRole)) return <Redirect href="/home" />;
- return <ScreenBackground><SafeAreaView style={styles.safe} edges={account?.primaryRole==='player' ? ['top','left','right'] : ['top','left','right','bottom']}><ScreenHeader fallback={fallback} logoStyle={styles.logo} rightAction={account ? logoutButton : undefined} />
+ return <ScreenBackground><SafeAreaView style={styles.safe} edges={account?.primaryRole==='player' ? ['top','left','right'] : ['top','left','right','bottom']}><ScreenHeader onBack={onBack} fallback={fallback} logoStyle={styles.logo} rightAction={account ? logoutButton : undefined} />
   {!account ? <AccountPending error={error} retry={retry} /> : <>{!!logoutError && <Text accessibilityRole="alert" style={{color:colors.redBright,marginHorizontal:20}}>{logoutError}</Text>}<View style={styles.content}>{children(account)}</View>{account.primaryRole==='player'&&<PlayerNavigation/>}</>}
  </SafeAreaView></ScreenBackground>;
 }

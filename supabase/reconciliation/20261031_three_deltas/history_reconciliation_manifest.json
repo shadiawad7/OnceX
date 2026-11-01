@@ -1,0 +1,249 @@
+{
+  "status": "PROPOSED_NOT_EXECUTED",
+  "total_local": 35,
+  "mark_applied_count": 34,
+  "leave_pending": [
+    "202610300001_ai_match_drafts.sql"
+  ],
+  "remote_history_at_approved_postcheck": [],
+  "migrations": [
+    {
+      "version": "202610100001",
+      "file": "202610100001_users_roles.sql",
+      "sha256": "52130715b31235d682b55fccb9567341fc2baf2792bd6d314fb133633cb24f4e",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610100002",
+      "file": "202610100002_super_admin.sql",
+      "sha256": "5628d114bc12fabd37fe09f317cfe5a4a862701d035ddf53502e5c985d0121a4",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610100003",
+      "file": "202610100003_hierarchy_accounts.sql",
+      "sha256": "64d470dd775011f986a95c348231d2e59938b7d55b367f37cc284c1448683098",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610100004",
+      "file": "202610100004_coach_manages_team.sql",
+      "sha256": "5319e977abf380ea5150e6049d5425175fbc16d1cd3effdbbed72b5c4e3df4f8",
+      "previous_classification": "Ausente",
+      "basis": "delta verified by approved remote postcheck"
+    },
+    {
+      "version": "202610100005",
+      "file": "202610100005_player_position.sql",
+      "sha256": "e51c7f6552bb657c71b91588e33e9c1ee9ccbfa75832875ab8f7240d2867dbb9",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610100006",
+      "file": "202610100006_player_details.sql",
+      "sha256": "b1abc0c924dac7a57220aa65324f5567692d1729cc6628f0ea9c48a23647d2d4",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610100007",
+      "file": "202610100007_player_rankings.sql",
+      "sha256": "8e3417d163cac5108e130a035949439431c07b736c117b4517189335edfb768d",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610110001",
+      "file": "202610110001_disable_manual_score.sql",
+      "sha256": "2aa4f84094acef03ac8b78266b974997e65ea17c87743e9c5349fcbb953bc099",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610110002",
+      "file": "202610110002_profile_photos.sql",
+      "sha256": "3b1e024c94736f56ddfe6cdf1b9d302222665009c585d512571a35fe94706ef1",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610110003",
+      "file": "202610110003_player_registration.sql",
+      "sha256": "f01e930235124b4b700d8b4f28d4437bc7e2384f5cc6dc7480e4609bc2b66d75",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610120001",
+      "file": "202610120001_coach_account_creation.sql",
+      "sha256": "4fea3f75a3516b38cfaa0b364b8836676ecf7fbad41a2229fa0bbdfacb5f0540",
+      "previous_classification": "Ausente",
+      "basis": "delta verified by approved remote postcheck"
+    },
+    {
+      "version": "202610120002",
+      "file": "202610120002_club_photos.sql",
+      "sha256": "95e89ee1ec8e9721cc677e473561d640cefc449e0d30cc2a07628b8b002ecf70",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610120003",
+      "file": "202610120003_team_plans.sql",
+      "sha256": "6f6ce55201166de8716e16c089b6d1cee5d469ce8ea17fc8406c56f92f9616eb",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610140001",
+      "file": "202610140001_team_plan_access.sql",
+      "sha256": "7e8aa96ca39e8e15123da1d20ce23c69a37cdca9aaf476bf0d3cb027f6eb9851",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610140002",
+      "file": "202610140002_coach_names.sql",
+      "sha256": "63783dc876d734bec43bb8a78753f4d8e8d6d4ef800c0d57359fb2b6e5492c03",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610170001",
+      "file": "202610170001_admin_hierarchy_delete.sql",
+      "sha256": "7a3ed4459a5df7e2228c6ad9b3892ff79073912d16a2b03733e0307f84532757",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610180001",
+      "file": "202610180001_coach_team_plans.sql",
+      "sha256": "750967e6cea1b1215d78f61e68d7666b6539611f65dd73434d549ca6ead10df4",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610180002",
+      "file": "202610180002_scheduled_team_plans.sql",
+      "sha256": "228fc49939264fbc43a84525977863dd4a1effb87ff3c429de595887c95c53af",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610180003",
+      "file": "202610180003_team_plan_cron.sql",
+      "sha256": "a68ce5a76fec4cabda91f71af0b5f87ee2abeae2b1210b72bcbadce6e33216c3",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610200001",
+      "file": "202610200001_match_lineups.sql",
+      "sha256": "69bd41eec1e362b8f064978bad62f38d1da23368d1138d2a3566c1f8c2a514dd",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610210001",
+      "file": "202610210001_oncex_single_plan.sql",
+      "sha256": "0be6a0a32917b6cf2b64dfc5aecd161d08f9b7c55f0fdaa984e2741c6933b0a1",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610210002",
+      "file": "202610210002_match_scoring_v2.sql",
+      "sha256": "61d575b3d813238fed5875348a71b43131c416ea3a686d2a1c6c1a8749607d9d",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610210003",
+      "file": "202610210003_ovr_monthly_history.sql",
+      "sha256": "0d8d85990d44b3a9da7f6263117cebe511a80b8895eb77a011676793074a974e",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610220001",
+      "file": "202610220001_unique_team_jerseys.sql",
+      "sha256": "783cbdd85b2fd21222614103b939ac6864edcf9f4da9e736ad4400e9bce9fefc",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610220002",
+      "file": "202610220002_live_jerseys_goalkeeper.sql",
+      "sha256": "5eca5786a3e47c8ae16d978024ca845941273b4730625865483c05fa585130ae",
+      "previous_classification": "Ausente",
+      "basis": "delta verified by approved remote postcheck"
+    },
+    {
+      "version": "202610230001",
+      "file": "202610230001_match_result_consistency.sql",
+      "sha256": "462652a52ff2a5bc8f35e6b205f903dd861422751a38527cdccbd4b58eb0fafc",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230002",
+      "file": "202610230002_away_win_bonus.sql",
+      "sha256": "da55db6d6ebd134deeed1949ebd9aeee0b55e199bbb787715ac2f9f84898c5f0",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230003",
+      "file": "202610230003_card_calculation.sql",
+      "sha256": "e9278af00e8ac6c56f44ea052a20c732fb11bcb5e59c498e1b26609309f5c4cc",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230004",
+      "file": "202610230004_card_first_appearance.sql",
+      "sha256": "41458024b22de2e7a36a695f827687c62186366c3b854f13a729d967ef6910db",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230005",
+      "file": "202610230005_card_any_cohort.sql",
+      "sha256": "d1240706a2246d57966d8167cf802a829b60cbc4256df6ccbdb9b676ffc39c07",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230006",
+      "file": "202610230006_card_singleton_reference.sql",
+      "sha256": "3124ec132c83d808965dc7c8288cd5282b0078e4f92d9f802348943e50c18b42",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230007",
+      "file": "202610230007_card_official_points_v2.sql",
+      "sha256": "ce7bc4b560d12ee8f08429f2bc26753a3152976666a14d72d4a4849015be5e14",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610230008",
+      "file": "202610230008_card_accumulated_impact.sql",
+      "sha256": "4165b4c5830d3fabcef029cecf7762162ce2435477236cb724cd248951e567d6",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    },
+    {
+      "version": "202610250001",
+      "file": "202610250001_photo_background_removal_setting.sql",
+      "sha256": "b20311ba72ffb6ee3771aa99b6b82cf1053696c1fc4cfb3edac679298b34031c",
+      "previous_classification": "Reflejada",
+      "basis": "final material equivalence in reconciliation report"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.117.3';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
 import { draftIssues, parseMatchDraft, requireIdentityConfirmation, type DraftRosterPlayer } from '../_shared/matchDraft.ts';
 import { openAIMatchProvider, MatchAIError } from './provider.ts';
 import { matchStatisticsError } from '../../../src/lib/matchValidation.ts';
@@ -17,6 +17,16 @@ Deno.serve(async request=>{
  if(request.method==='OPTIONS')return new Response('ok',{headers:cors});
  if(request.method!=='POST')return reply(405,{error:'Método no permitido.'});
  let transcript:string|undefined;
+ let lease:string|undefined;
+ let completionClient:SupabaseClient|undefined;
+ async function finish(status:number,body:Record<string,unknown>){
+  if(lease&&completionClient){
+   const saved=await completionClient.rpc('ai_match_request_finish',{request_lease:lease,status_code:status,result_body:body});
+   if(saved.error||saved.data!==true)throw new Error('RESULT_NOT_SAVED');
+   lease=undefined;
+  }
+  return reply(status,body);
+ }
  try{
   const url=Deno.env.get('SUPABASE_URL'),anon=Deno.env.get('SUPABASE_ANON_KEY');
   const token=request.headers.get('Authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1];
@@ -39,20 +49,37 @@ Deno.serve(async request=>{
    if(typeof text!=='string'||!text.trim()||text.length>12000)return reply(400,{error:'Escribe entre 1 y 12.000 caracteres.'});
   }
   if(typeof teamId!=='string'||!uuid.test(teamId))return reply(400,{error:'Selecciona un equipo válido.'});
-  // Exact same authorization as the existing lineup/confirmation RPCs.
-  const context=await caller.rpc('ai_match_context',{target_team:teamId});
-  if(context.error)return reply(context.error.code==='42501'?403:context.error.code==='54000'?429:503,{error:context.error.code==='42501'?'No puedes preparar partidos de este equipo.':context.error.code==='54000'?'Has alcanzado el límite de 30 peticiones de IA por hora.':'No se pudo obtener la plantilla autorizada. Comprueba la migración de IA.'});
-  const roster=context.data?.players as DraftRosterPlayer[];
-  if(!Array.isArray(roster)||roster.length>100)return reply(400,{error:'No se puede procesar esta plantilla.'});
   if(audio){
    const header=new Uint8Array(await audio.slice(0,12).arrayBuffer()),magic=new TextDecoder().decode(header);
    const type=audio.type.split(';')[0];
    const valid=type.includes('webm')?header[0]===0x1a&&header[1]===0x45&&header[2]===0xdf&&header[3]===0xa3:type.includes('wav')?magic.startsWith('RIFF')&&magic.slice(8,12)==='WAVE':type.includes('ogg')?magic.startsWith('OggS'):type.includes('flac')?magic.startsWith('fLaC'):type.includes('mpeg')?magic.startsWith('ID3')||(header[0]===0xff&&(header[1]&0xe0)===0xe0):magic.slice(4,8)==='ftyp';
    if(!valid)return reply(400,{error:'La grabación no es un archivo de audio válido. Vuelve a dictar o escribe el relato.'});
   }
+  // Hash canonical content, not multipart boundaries or a client-provided identifier.
+  const referenceDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const content=audio?new Uint8Array(await audio.arrayBuffer()):new TextEncoder().encode(text as string);
+  const prefix=new TextEncoder().encode(JSON.stringify(['oncex-match-v1',audio?'audio':'text',audio?.type.split(';')[0]??'']));
+  const input=new Uint8Array(prefix.length+content.length);input.set(prefix);input.set(content,prefix.length);
+  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',input))).map(v=>v.toString(16).padStart(2,'0')).join('');
+  const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if(!serviceKey)return reply(503,{error:'La IA aún no está configurada en el servidor.'});
+  completionClient=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
+  const context=await caller.rpc('ai_match_request_start',{target_team:teamId,input_hash:hash});
+  if(context.error)return reply(context.error.code==='42501'?403:context.error.code==='54000'?429:503,{error:context.error.code==='42501'?'No puedes preparar partidos de este equipo.':context.error.code==='54000'?'Has alcanzado el límite de 30 peticiones de IA por hora.':'No se pudo reservar la solicitud de IA.'});
+  if(context.data?.state==='completed'){
+   const body=context.data.body;
+   if(context.data.status===200){
+    try{parseMatchDraft(body?.draft,context.data.players);}catch{return reply(409,{error:'La plantilla ha cambiado. Continúa con el registro manual.'});}
+   }
+   return reply(context.data.status,body);
+  }
+  if(context.data?.state==='processing'||context.data?.state==='expired')return reply(409,{error:'Este relato ya se envió. Si sigue en curso, espera y vuelve a consultar enviándolo igual. Si no se recupera el resultado, continúa manualmente; no se repetirá el consumo.'});
+  if(context.data?.state!=='claimed'||typeof context.data.lease_id!=='string')throw new Error('INVALID_RESERVATION');
+  lease=context.data.lease_id;
+  const roster=context.data.players as DraftRosterPlayer[];
+  if(!Array.isArray(roster)||roster.length>100)return await finish(400,{error:'No se puede procesar esta plantilla.'});
   const provider=openAIMatchProvider();
   if(audio){transcript=await provider.transcribe(audio);text=transcript;}
-  const referenceDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const rawDraft=await provider.interpret(text as string,roster,referenceDate);
   const draft=requireIdentityConfirmation(parseMatchDraft(rawDraft,roster),roster,text as string);
   const issues=draftIssues(draft);
@@ -61,10 +88,12 @@ Deno.serve(async request=>{
    const issue=matchStatisticsError(draft.players.map(p=>({...p,player_name:p.mentioned_name,goals:p.goals!,own_goals:p.own_goals!,assists:p.assists!,yellow_cards:p.yellow_cards!,red_cards:p.red_cards!})),draft.goals_for,draft.goals_against,draft.duration);
    if(issue)issues.warnings.push(issue);
   }
-  return reply(200,{...(transcript?{transcript}:{}),draft:{...draft,missing_fields:[...new Set([...draft.missing_fields,...issues.missing])],warnings:[...new Set([...draft.warnings,...issues.warnings]) ]}});
+  return await finish(200,{...(transcript?{transcript}:{}),draft:{...draft,missing_fields:[...new Set([...draft.missing_fields,...issues.missing])],warnings:[...new Set([...draft.warnings,...issues.warnings]) ]}});
  }catch(error){
   const code=error instanceof MatchAIError?error.code:error instanceof Error&&error.message==='SIZE'?'SIZE':'INVALID_RESPONSE';
   const messages:Record<string,string>={CONFIG:'La IA aún no está configurada en el servidor.',TIMEOUT:'La IA ha tardado demasiado. Puedes continuar manualmente.',RATE_LIMIT:'El servicio de IA ha alcanzado su límite. Inténtalo más tarde o continúa manualmente.',EMPTY_TRANSCRIPT:'No se ha entendido la grabación. Vuelve a dictar o escribe el relato.',SIZE:'El archivo o relato es demasiado grande.',REFUSAL:'La IA no ha podido preparar el acta. Revisa el relato o continúa manualmente.'};
-  return reply(code==='SIZE'?413:code==='RATE_LIMIT'?429:code==='EMPTY_TRANSCRIPT'||code==='REFUSAL'?422:503,{error:messages[code]??'No se ha podido generar un borrador válido. No se ha guardado ningún dato del partido. Puedes continuar manualmente.',...(transcript?{transcript}:{})});
+  const status=code==='SIZE'?413:code==='RATE_LIMIT'?429:code==='EMPTY_TRANSCRIPT'||code==='REFUSAL'?422:503;
+  const body={error:messages[code]??'No se ha podido generar un borrador válido. No se ha guardado ningún dato del partido. Puedes continuar manualmente.',...(transcript?{transcript}:{})};
+  try{return await finish(status,body);}catch{return reply(503,{error:'No se pudo recuperar el resultado. No se repetirá la solicitud automáticamente. Continúa manualmente.'});}
  }
 });

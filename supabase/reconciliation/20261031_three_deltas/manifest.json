@@ -1,0 +1,96 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "source_audit_at": "2026-10-30T19:06:10.974327+00:00",
+  "versions": [
+    "202610100004",
+    "202610120001",
+    "202610220002"
+  ],
+  "before": [
+    {
+      "signature": "private.can_provision(uuid,text,uuid,uuid)",
+      "definition_md5": "25cd2b723fa8d3e71ee9239bd475b6e6",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "public.save_match_lineup(uuid,uuid,text,date,integer,uuid[],uuid[])",
+      "definition_md5": "2e64129868f557554ec216921d0ffb1f",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}"
+    }
+  ],
+  "after_source_md5": {
+    "private.can_provision(uuid,text,uuid,uuid)": "1e7e8c5ce56b7d2f5b78cd858a61774e",
+    "public.save_match_lineup(uuid,uuid,text,date,integer,uuid[],uuid[])": "171a76538f134b88a92a2073cbed9468",
+    "public.team_jersey_numbers(uuid,uuid)": "8c352946731f6445085f693d8d2ee432",
+    "private.require_starting_goalkeeper()": "38b4b330133eb4d14630ee3e0221aadc"
+  },
+  "protected": [
+    {
+      "signature": "private.is_team_coach(uuid)",
+      "definition_md5": "b925edb6b494222c1a9088ea1bd6dd31",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,authenticated=X/postgres}"
+    },
+    {
+      "signature": "private.can_manage_match_team(uuid)",
+      "definition_md5": "efc5dfbc2378116fe5ec8d87681a0842",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "public.team_jersey_available(uuid,integer,uuid)",
+      "definition_md5": "483eef7f0731f0f9cce1f442485f8585",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "public.save_match_lineup_v2(uuid,uuid,text,date,integer,uuid[],text,uuid[])",
+      "definition_md5": "ebf06d6766797b610db99a9661201272",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "public.confirm_match_statistics_v3(uuid,integer,integer,jsonb,integer,text,text,text)",
+      "definition_md5": "e4fb6ff98b374e633677088863b05d0d",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "private.oncex_points_v2(text,integer,integer,integer,integer,integer,integer,integer,boolean,integer,integer)",
+      "definition_md5": "9a7813e192706df37c94798b1f7ba908",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "private.card_inputs(text)",
+      "definition_md5": "9f8f288a89186092c84b008a1f573883",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "private.refresh_card_season(text)",
+      "definition_md5": "32bb24ca28a52e5fd1590de523439df1",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "public.player_ovr_evolution(uuid,text)",
+      "definition_md5": "62819b3a5af4b96ed80ce461e21ace86",
+      "owner": "postgres",
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    }
+  ],
+  "original_migration_sha256": {
+    "202610100004_coach_manages_team.sql": "5319e977abf380ea5150e6049d5425175fbc16d1cd3effdbbed72b5c4e3df4f8",
+    "202610120001_coach_account_creation.sql": "4fea3f75a3516b38cfaa0b364b8836676ecf7fbad41a2229fa0bbdfacb5f0540",
+    "202610220002_live_jerseys_goalkeeper.sql": "5eca5786a3e47c8ae16d978024ca845941273b4730625865483c05fa585130ae"
+  },
+  "artifact_sha256": {
+    "01_precheck_readonly.sql": "e939927cea2b772ec5e2f107e0a60b95b52a80a0c5c5c6dc432368008698d3e4",
+    "02_patch.sql": "e4165312c484c2a7b1e888ffcc1ac3e9bbe5407b62291f7069524da5ebde8f0b",
+    "03_postcheck_readonly.sql": "0409da1206b660d6ba3a619c064aa5c899b67c5f618daf1f15ece0c9b9279c3e",
+    "04_rollback.sql": "54d28fd47b144b757baf14cc82988c291e78a55d237097b1b04ce7cf95b90ced"
+  }
+}

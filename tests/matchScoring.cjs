@@ -6,8 +6,8 @@ const base={position:'Delantero',duration:90,minutes:80,goals:2,ownGoals:0,assis
 test('official forward example = 14',()=>assert.equal(matchPointBreakdown(base).total,14));
 test('official defender example = 10',()=>assert.equal(matchPointBreakdown({...base,position:'Defensa',minutes:90,goals:1,assists:0,yellowCards:1,teamGoals:1,opponentGoals:0,concededWhilePlaying:0}).total,10));
 test('short appearance still earns actions and result',()=>assert.equal(matchPointBreakdown({...base,minutes:35,goals:1,assists:0}).total,6));
-test('independent minute thresholds',()=>{assert.deepEqual([90,80,70].map(participationThreshold),[60,53,47]);assert.deepEqual([90,80].map(cleanSheetThreshold),[54,48]);});
-test('clean sheet survives a goal after substitution',()=>{assert.equal(matchPointBreakdown({...base,minutes:54,concededWhilePlaying:0}).cleanSheet,true);assert.equal(matchPointBreakdown({...base,minutes:53,concededWhilePlaying:0}).cleanSheet,false);});
+test('independent minute thresholds',()=>{assert.deepEqual([90,80,70].map(participationThreshold),[60,53,47]);assert.deepEqual([90,80].map(cleanSheetThreshold),[60,60]);});
+test('clean sheet survives a goal after substitution',()=>{assert.equal(matchPointBreakdown({...base,minutes:60,concededWhilePlaying:0}).cleanSheet,true);assert.equal(matchPointBreakdown({...base,minutes:59,concededWhilePlaying:0}).cleanSheet,false);});
 test('bench player has no collective or minutes reward',()=>{const result=matchPointBreakdown({...base,minutes:0,goals:0,assists:0,concededWhilePlaying:0});assert.equal(result.total,0);});
 test('all positional penalties and weights',()=>{for(const position of Object.keys(MATCH_POINTS)){const w=MATCH_POINTS[position];const result=matchPointBreakdown({...base,position,goals:1,ownGoals:1,assists:1,yellowCards:1,redCards:1});assert.equal(result.total,4+w.goal+w.ownGoal+w.assist+w.yellow+w.red);}});
 test('negative points are retained',()=>assert.equal(matchPointBreakdown({...base,position:'Portero',minutes:1,goals:0,assists:0,ownGoals:1,yellowCards:1,redCards:1,teamGoals:0,opponentGoals:1}).total,-15));

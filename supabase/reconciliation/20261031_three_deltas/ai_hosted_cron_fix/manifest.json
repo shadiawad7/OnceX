@@ -1,0 +1,16 @@
+{
+  "status": "LISTO PARA REINTENTAR DRY-RUN",
+  "migration_sha256": "c87ab99dca394fbb7c5f1595f9a1def825489fb3e9ba2b10174578c5c38279d3",
+  "failed_migration_sha256": "15a17ed02478da22ffaff8213a69db8d40cb96c91d7b062ca97d07eacabf24b3",
+  "postgres_superuser": false,
+  "postgres_bypassrls": false,
+  "cron_owner": "supabase_admin",
+  "postgres_cron_write": false,
+  "node_tests_passed": 99,
+  "deno_tests_passed": 3,
+  "concurrent_postgres_sessions": 16,
+  "concurrent_migrations_success": 1,
+  "concurrent_migrations_aborted": 1,
+  "remote_operations": 0,
+  "remote_rollback_confirmed": false
+}

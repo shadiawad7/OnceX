@@ -1,0 +1,1 @@
+PASS: 16 concurrent DB sessions -> 1 claim, 15 pending, 1 quota increment; immutable replay; authenticated/anon completion denied; RLS; reauthorization; expiry/cleanup; cached failure; no abandoned-work takeover.

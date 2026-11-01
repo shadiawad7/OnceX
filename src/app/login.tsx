@@ -119,18 +119,16 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
   return (
     <View style={styles.background}>
       <Animated.View style={[styles.backgroundLayer, { opacity: backgroundOpacity, pointerEvents: 'none' }]}>
-        <View style={styles.background}>
-         <Image
+        <Image
           source={require('../../assets/login-stadium.png')}
           onLoad={() => setBackgroundReady(true)}
           onError={() => setBackgroundReady(true)}
           resizeMode="cover"
-          style={StyleSheet.absoluteFill}
+          style={styles.backgroundImage}
           accessible={false}
           pointerEvents="none"
-         />
-          <View style={[styles.shade,{pointerEvents:'none'}]} />
-        </View>
+        />
+        <View style={[styles.shade,{pointerEvents:'none'}]} />
       </Animated.View>
       {!contentReady && (
         <Animated.View style={[styles.introLogo, { opacity: logoOpacity, pointerEvents:'none' }]}>
@@ -206,6 +204,7 @@ const [contentOffset] = useState(() => new Animated.Value(skipIntro ? 0 : 18));
 const styles = StyleSheet.create({
   logoLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   background: { flex: 1, backgroundColor: colors.background },
+  backgroundImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   backgroundLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   introLogo: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   shade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0, 0, 0, 0.18)' },

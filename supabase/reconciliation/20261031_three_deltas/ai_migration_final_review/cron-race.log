@@ -1,0 +1,1 @@
+PASS: 16 sessions, 1 claim/quota; replay; permissions/RLS; authorization; expiry/cleanup; immutable finish; no takeover; late completion rejected; UTC quota invariant across timezones; no direct service-role table access; concurrent cron writer preserved.

@@ -1,0 +1,7 @@
+BEGIN
+SET
+SET
+SET
+SET
+ERROR:  ABORT: audited definition, owner or ACL changed: private.can_provision(uuid,text,uuid,uuid)
+CONTEXT:  PL/pgSQL function inline_code_block line 23 at RAISE

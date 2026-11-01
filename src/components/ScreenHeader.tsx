@@ -5,6 +5,7 @@ import Brand from './Brand';
 import { colors } from '../theme/colors';
 type Props = {
   fallback?: Href;
+  onBack?: () => void;
   root?: boolean;
   transparent?: boolean;
   hideBack?: boolean;
@@ -17,7 +18,8 @@ export default function ScreenHeader({
   transparent = false,
   hideBack = false,
   logoStyle,
-  rightAction
+  rightAction,
+  onBack
 }: Props) {
   const { width } = useWindowDimensions();
   const requestedLogo = StyleSheet.flatten(logoStyle);
@@ -26,6 +28,7 @@ export default function ScreenHeader({
   const logoWidth = Math.min(requestedWidth, Math.max(48, width - 32 - (rightAction ? 184 : 88)));
   const logoHeight = requestedHeight * logoWidth / requestedWidth;
   const goBack = () => {
+    if (onBack) { onBack(); return; }
     if (router.canGoBack()) router.back();else if (fallback === '/') router.replace({
       pathname: '/',
       params: {

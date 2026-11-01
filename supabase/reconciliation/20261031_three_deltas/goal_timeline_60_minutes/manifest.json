@@ -1,0 +1,9 @@
+{
+  "new_migration": "202611010001_clean_sheet_60_minutes.sql",
+  "sha256": "f403ea18bd7d2db5f0537590b5380e0fb09cdefb159bdfc37ab847995b5ea50a",
+  "remote_operations": 0,
+  "node_pass": 118,
+  "official_sql_59_minutes_clean": false,
+  "official_sql_60_minutes_clean": true,
+  "official_sql_60_minutes_conceded_clean": false
+}

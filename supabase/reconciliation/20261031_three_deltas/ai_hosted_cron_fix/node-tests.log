@@ -1,0 +1,604 @@
+TAP version 13
+# Subtest: unknowns remain null, and source is not mutated
+ok 1 - unknowns remain null, and source is not mutated
+  ---
+  duration_ms: 12.900279
+  type: 'test'
+  ...
+# Subtest: strict schema rejects extra scores, foreign players/candidates, invalid dates and nonintegers
+ok 2 - strict schema rejects extra scores, foreign players/candidates, invalid dates and nonintegers
+  ---
+  duration_ms: 15.45936
+  type: 'test'
+  ...
+# Subtest: unique exact first name may match; ambiguous first name must be selected
+ok 3 - unique exact first name may match; ambiguous first name must be selected
+  ---
+  duration_ms: 9.20399
+  type: 'test'
+  ...
+# Subtest: fuzzy, uncertain and invented mentions cannot silently select a player
+ok 4 - fuzzy, uncertain and invented mentions cannot silently select a player
+  ---
+  duration_ms: 1.705915
+  type: 'test'
+  ...
+# Subtest: duplicates, impossible minutes, unplayed actions and inconsistent result are surfaced
+ok 5 - duplicates, impossible minutes, unplayed actions and inconsistent result are surfaced
+  ---
+  duration_ms: 4.626712
+  type: 'test'
+  ...
+# Subtest: unauthenticated and unauthorized requests never reach OpenAI
+ok 6 - unauthenticated and unauthorized requests never reach OpenAI
+  ---
+  duration_ms: 2085.074078
+  type: 'test'
+  ...
+# Subtest: budget, invalid body and missing server secret fail without provider calls
+ok 7 - budget, invalid body and missing server secret fail without provider calls
+  ---
+  duration_ms: 1429.35738
+  type: 'test'
+  ...
+# Subtest: valid request returns a validated draft, uses server roster, and never writes official data
+ok 8 - valid request returns a validated draft, uses server roster, and never writes official data
+  ---
+  duration_ms: 226.394798
+  type: 'test'
+  ...
+# Subtest: several players, home/away result and every supported action survive interpretation and validation
+ok 9 - several players, home/away result and every supported action survive interpretation and validation
+  ---
+  duration_ms: 156.546563
+  type: 'test'
+  ...
+# Subtest: a named player outside the roster stays unresolved without creating an account
+ok 10 - a named player outside the roster stays unresolved without creating an account
+  ---
+  duration_ms: 226.500431
+  type: 'test'
+  ...
+# Subtest: invalid, refused, truncated or failed model response returns no draft and no secret
+ok 11 - invalid, refused, truncated or failed model response returns no draft and no secret
+  ---
+  duration_ms: 2543.839352
+  type: 'test'
+  ...
+# Subtest: one recording transcribes once and interprets once; both draft and transcript are reviewable
+ok 12 - one recording transcribes once and interprets once; both draft and transcript are reviewable
+  ---
+  duration_ms: 414.05208
+  type: 'test'
+  ...
+# Subtest: empty, wrongly typed and corrupt audio never reach the provider
+ok 13 - empty, wrongly typed and corrupt audio never reach the provider
+  ---
+  duration_ms: 882.187021
+  type: 'test'
+  ...
+# Subtest: empty transcription prevents interpretation
+ok 14 - empty transcription prevents interpretation
+  ---
+  duration_ms: 250.979857
+  type: 'test'
+  ...
+# Subtest: failed interpretation preserves transcript so the coach can continue manually
+ok 15 - failed interpretation preserves transcript so the coach can continue manually
+  ---
+  duration_ms: 275.576325
+  type: 'test'
+  ...
+# Subtest: timeout and OpenAI rate limit produce recoverable messages without official writes
+ok 16 - timeout and OpenAI rate limit produce recoverable messages without official writes
+  ---
+  duration_ms: 445.304097
+  type: 'test'
+  ...
+# Subtest: model is configurable only from server environment
+ok 17 - model is configurable only from server environment
+  ---
+  duration_ms: 243.856191
+  type: 'test'
+  ...
+# Subtest: review blocks unresolved identities, duplicate players and unreported actions
+ok 18 - review blocks unresolved identities, duplicate players and unreported actions
+  ---
+  duration_ms: 7.935815
+  type: 'test'
+  ...
+# Subtest: reviewed statistics bind to server slots without inventing minutes or changing starter identity
+ok 19 - reviewed statistics bind to server slots without inventing minutes or changing starter identity
+  ---
+  duration_ms: 16.834149
+  type: 'test'
+  ...
+# Subtest: manual registration is unchanged when no AI draft is applied
+ok 20 - manual registration is unchanged when no AI draft is applied
+  ---
+  duration_ms: 2.710476
+  type: 'test'
+  ...
+# Subtest: mobile sends only text and team ID to authenticated backend, never a provider model/key
+ok 21 - mobile sends only text and team ID to authenticated backend, never a provider model/key
+  ---
+  duration_ms: 131.887523
+  type: 'test'
+  ...
+# Subtest: mobile network failures and partial voice failures remain recoverable
+ok 22 - mobile network failures and partial voice failures remain recoverable
+  ---
+  duration_ms: 92.041644
+  type: 'test'
+  ...
+# Subtest: duplicate completed text replays the same result without provider calls or quota
+ok 23 - duplicate completed text replays the same result without provider calls or quota
+  ---
+  duration_ms: 171.583984
+  type: 'test'
+  ...
+# Subtest: concurrent requests across separate handler instances reserve one processing attempt
+ok 24 - concurrent requests across separate handler instances reserve one processing attempt
+  ---
+  duration_ms: 319.064061
+  type: 'test'
+  ...
+# Subtest: multipart boundaries do not change the audio identity; cached transcript/draft are reused
+ok 25 - multipart boundaries do not change the audio identity; cached transcript/draft are reused
+  ---
+  duration_ms: 118.378406
+  type: 'test'
+  ...
+# Subtest: provider failure is cached; repeated failures never repeat paid processing
+ok 26 - provider failure is cached; repeated failures never repeat paid processing
+  ---
+  duration_ms: 98.127689
+  type: 'test'
+  ...
+# Subtest: lost completion write leaves a reservation and never takes over processing
+ok 27 - lost completion write leaves a reservation and never takes over processing
+  ---
+  duration_ms: 91.218349
+  type: 'test'
+  ...
+# Subtest: different reports are different explicit operations
+ok 28 - different reports are different explicit operations
+  ---
+  duration_ms: 122.718754
+  type: 'test'
+  ...
+# Subtest: missing server secret cannot initiate a request
+ok 29 - missing server secret cannot initiate a request
+  ---
+  duration_ms: 28.527406
+  type: 'test'
+  ...
+# Subtest: adapter sends original as multipart and accepts PNG only
+ok 30 - adapter sends original as multipart and accepts PNG only
+  ---
+  duration_ms: 335.657353
+  type: 'test'
+  ...
+# Subtest: non-PNG provider response is rejected
+ok 31 - non-PNG provider response is rejected
+  ---
+  duration_ms: 7.905076
+  type: 'test'
+  ...
+# Subtest: provider API failures are rejected without exposing response/secret
+ok 32 - provider API failures are rejected without exposing response/secret
+  ---
+  duration_ms: 14.61134
+  type: 'test'
+  ...
+# Subtest: display cache misses never process a photo
+ok 33 - display cache misses never process a photo
+  ---
+  duration_ms: 471.735552
+  type: 'test'
+  ...
+# Subtest: upload processes once and subsequent reads/uploads reuse stored PNG
+ok 34 - upload processes once and subsequent reads/uploads reuse stored PNG
+  ---
+  duration_ms: 136.881209
+  type: 'test'
+  ...
+# Subtest: RLS denial prevents all provider calls
+ok 35 - RLS denial prevents all provider calls
+  ---
+  duration_ms: 14.70282
+  type: 'test'
+  ...
+# Subtest: read permission cannot authorize processing
+ok 36 - read permission cannot authorize processing
+  ---
+  duration_ms: 16.001635
+  type: 'test'
+  ...
+# Subtest: coaches/nonplayers are not sent to provider
+ok 37 - coaches/nonplayers are not sent to provider
+  ---
+  duration_ms: 10.850854
+  type: 'test'
+  ...
+# Subtest: provider failure preserves original and does not retry on display
+ok 38 - provider failure preserves original and does not retry on display
+  ---
+  duration_ms: 67.868938
+  type: 'test'
+  ...
+# Subtest: source changed while processing cannot attach stale cutout
+ok 39 - source changed while processing cannot attach stale cutout
+  ---
+  duration_ms: 32.080405
+  type: 'test'
+  ...
+# Subtest: simultaneous requests share one storage claim
+ok 40 - simultaneous requests share one storage claim
+  ---
+  duration_ms: 24.347571
+  type: 'test'
+  ...
+# Subtest: new upload can retry failed content; reads still never retry
+ok 41 - new upload can retry failed content; reads still never retry
+  ---
+  duration_ms: 45.425683
+  type: 'test'
+  ...
+# Subtest: disabled background removal never calls provider or creates a claim
+ok 42 - disabled background removal never calls provider or creates a claim
+  ---
+  duration_ms: 41.793547
+  type: 'test'
+  ...
+# Subtest: settingsError fails closed without provider calls
+ok 43 - settingsError fails closed without provider calls
+  ---
+  duration_ms: 15.599093
+  type: 'test'
+  ...
+# Subtest: settingsMissing fails closed without provider calls
+ok 44 - settingsMissing fails closed without provider calls
+  ---
+  duration_ms: 11.768048
+  type: 'test'
+  ...
+# Subtest: switch can enable subsequent uploads without a failed claim blocking them
+ok 45 - switch can enable subsequent uploads without a failed claim blocking them
+  ---
+  duration_ms: 38.710046
+  type: 'test'
+  ...
+# Subtest: disabling preserves existing stored cutouts and never reprocesses them
+ok 46 - disabling preserves existing stored cutouts and never reprocesses them
+  ---
+  duration_ms: 54.137564
+  type: 'test'
+  ...
+# Subtest: disabled background removal is a normal saved upload, with no failure alert
+ok 47 - disabled background removal is a normal saved upload, with no failure alert
+  ---
+  duration_ms: 8.920555
+  type: 'test'
+  ...
+# Subtest: failed removal still explains that the original was saved
+ok 48 - failed removal still explains that the original was saved
+  ---
+  duration_ms: 5.482321
+  type: 'test'
+  ...
+# Subtest: step one is required before every later input
+ok 49 - step one is required before every later input
+  ---
+  duration_ms: 42.144236
+  type: 'test'
+  ...
+# Subtest: venue unlocks details and result without requiring a result yet
+ok 50 - venue unlocks details and result without requiring a result yet
+  ---
+  duration_ms: 10.488681
+  type: 'test'
+  ...
+# Subtest: both goals must be filled before player statistics
+ok 51 - both goals must be filled before player statistics
+  ---
+  duration_ms: 1.927824
+  type: 'test'
+  ...
+# Subtest: explicit 0-0 is a complete valid result
+ok 52 - explicit 0-0 is a complete valid result
+  ---
+  duration_ms: 0.785451
+  type: 'test'
+  ...
+# Subtest: home and away allow statistics after score is complete
+ok 53 - home and away allow statistics after score is complete
+  ---
+  duration_ms: 0.791813
+  type: 'test'
+  ...
+# Subtest: official forward example = 14
+ok 54 - official forward example = 14
+  ---
+  duration_ms: 14.23252
+  type: 'test'
+  ...
+# Subtest: official defender example = 10
+ok 55 - official defender example = 10
+  ---
+  duration_ms: 14.850972
+  type: 'test'
+  ...
+# Subtest: short appearance still earns actions and result
+ok 56 - short appearance still earns actions and result
+  ---
+  duration_ms: 1.634954
+  type: 'test'
+  ...
+# Subtest: independent minute thresholds
+ok 57 - independent minute thresholds
+  ---
+  duration_ms: 6.828856
+  type: 'test'
+  ...
+# Subtest: clean sheet survives a goal after substitution
+ok 58 - clean sheet survives a goal after substitution
+  ---
+  duration_ms: 6.329066
+  type: 'test'
+  ...
+# Subtest: bench player has no collective or minutes reward
+ok 59 - bench player has no collective or minutes reward
+  ---
+  duration_ms: 1.637292
+  type: 'test'
+  ...
+# Subtest: all positional penalties and weights
+ok 60 - all positional penalties and weights
+  ---
+  duration_ms: 1.718449
+  type: 'test'
+  ...
+# Subtest: negative points are retained
+ok 61 - negative points are retained
+  ---
+  duration_ms: 0.702284
+  type: 'test'
+  ...
+# Subtest: invalid inputs rejected
+ok 62 - invalid inputs rejected
+  ---
+  duration_ms: 5.506245
+  type: 'test'
+  ...
+# Subtest: weighted DEL example rounds to 89 without using accumulated points
+ok 63 - weighted DEL example rounds to 89 without using accumulated points
+  ---
+  duration_ms: 3.776121
+  type: 'test'
+  ...
+# Subtest: official table matches the four positions exactly
+ok 64 - official table matches the four positions exactly
+  ---
+  duration_ms: 1.324529
+  type: 'test'
+  ...
+# Subtest: two defender goals and two yellows multiply independently
+ok 65 - two defender goals and two yellows multiply independently
+  ---
+  duration_ms: 0.651748
+  type: 'test'
+  ...
+# Subtest: 59 minutes has no participation bonus, 60 has exactly two
+ok 66 - 59 minutes has no participation bonus, 60 has exactly two
+  ---
+  duration_ms: 0.519519
+  type: 'test'
+  ...
+# Subtest: client and official SQL position table stay in sync
+ok 67 - client and official SQL position table stay in sync
+  ---
+  duration_ms: 4.117099
+  type: 'test'
+  ...
+# Subtest: full-match conceded goals follow result changes without another input
+ok 68 - full-match conceded goals follow result changes without another input
+  ---
+  duration_ms: 331.165847
+  type: 'test'
+  ...
+# Subtest: live preview adds actions immediately before minutes or result are entered
+ok 69 - live preview adds actions immediately before minutes or result are entered
+  ---
+  duration_ms: 332.121417
+  type: 'test'
+  ...
+# Subtest: live preview never assumes a draw or clean sheet from empty result
+ok 70 - live preview never assumes a draw or clean sheet from empty result
+  ---
+  duration_ms: 225.560038
+  type: 'test'
+  ...
+# Subtest: complete live preview equals official calculation in every position
+ok 71 - complete live preview equals official calculation in every position
+  ---
+  duration_ms: 202.581544
+  type: 'test'
+  ...
+# Subtest: away win bonus requires at least 60 minutes in all positions
+ok 72 - away win bonus requires at least 60 minutes in all positions
+  ---
+  duration_ms: 215.878783
+  type: 'test'
+  ...
+# Subtest: draws, losses and unknown venue do not add away win points
+ok 73 - draws, losses and unknown venue do not add away win points
+  ---
+  duration_ms: 0.695054
+  type: 'test'
+  ...
+# Subtest: away bonus is fixed at 60 even in a shorter legacy match
+ok 74 - away bonus is fixed at 60 even in a shorter legacy match
+  ---
+  duration_ms: 0.595185
+  type: 'test'
+  ...
+# Subtest: updated DEL Card example rounds 86.45 to 86
+ok 75 - updated DEL Card example rounds 86.45 to 86
+  ---
+  duration_ms: 1.112948
+  type: 'test'
+  ...
+# Subtest: season boundary is based on match date
+ok 76 - season boundary is based on match date
+  ---
+  duration_ms: 12.903343
+  type: 'test'
+  ...
+# Subtest: invalid dates have no season
+ok 77 - invalid dates have no season
+  ---
+  duration_ms: 1.30739
+  type: 'test'
+  ...
+# Subtest: fewer or more scorers than match result rejected
+ok 78 - fewer or more scorers than match result rejected
+  ---
+  duration_ms: 6.873874
+  type: 'test'
+  ...
+# Subtest: assists cannot exceed goals
+ok 79 - assists cannot exceed goals
+  ---
+  duration_ms: 1.730241
+  type: 'test'
+  ...
+# Subtest: player cannot assist their own goals
+ok 80 - player cannot assist their own goals
+  ---
+  duration_ms: 0.95322
+  type: 'test'
+  ...
+# Subtest: goals without assist are allowed
+ok 81 - goals without assist are allowed
+  ---
+  duration_ms: 0.932595
+  type: 'test'
+  ...
+# Subtest: valid reciprocal assists allowed
+ok 82 - valid reciprocal assists allowed
+  ---
+  duration_ms: 1.210327
+  type: 'test'
+  ...
+# Subtest: zero draw valid
+ok 83 - zero draw valid
+  ---
+  duration_ms: 0.711756
+  type: 'test'
+  ...
+# Subtest: own goals bounded by opponent goals
+ok 84 - own goals bounded by opponent goals
+  ---
+  duration_ms: 2.340413
+  type: 'test'
+  ...
+# Subtest: nonparticipant actions rejected
+ok 85 - nonparticipant actions rejected
+  ---
+  duration_ms: 1.170413
+  type: 'test'
+  ...
+# Subtest: card and minute bounds enforced
+ok 86 - card and minute bounds enforced
+  ---
+  duration_ms: 2.912299
+  type: 'test'
+  ...
+# Subtest: large camera photo is cropped then bounded before PNG encoding
+ok 87 - large camera photo is cropped then bounded before PNG encoding
+  ---
+  duration_ms: 20.847912
+  type: 'test'
+  ...
+# Subtest: small transparent images retain PNG format without upscaling
+ok 88 - small transparent images retain PNG format without upscaling
+  ---
+  duration_ms: 4.362933
+  type: 'test'
+  ...
+# Subtest: unreadable crop is reported instead of returning an unusable photo
+ok 89 - unreadable crop is reported instead of returning an unusable photo
+  ---
+  duration_ms: 5.011246
+  type: 'test'
+  ...
+# Subtest: landscape source previews exactly the centered portrait crop
+ok 90 - landscape source previews exactly the centered portrait crop
+  ---
+  duration_ms: 1.501279
+  type: 'test'
+  ...
+# Subtest: zoom and drag export the same source pixels visible in the frame
+ok 91 - zoom and drag export the same source pixels visible in the frame
+  ---
+  duration_ms: 2.365689
+  type: 'test'
+  ...
+# Subtest: all frame edges stay aligned after extreme drags and viewport changes
+ok 92 - all frame edges stay aligned after extreme drags and viewport changes
+  ---
+  duration_ms: 3.256752
+  type: 'test'
+  ...
+# Subtest: preview normalization uses the decoded oriented dimensions and writes PNG
+ok 93 - preview normalization uses the decoded oriented dimensions and writes PNG
+  ---
+  duration_ms: 2.424558
+  type: 'test'
+  ...
+# Subtest: web preserves PNG bytes instead of the picker JPEG rendition
+ok 94 - web preserves PNG bytes instead of the picker JPEG rendition
+  ---
+  duration_ms: 15.329549
+  type: 'test'
+  ...
+# Subtest: ios preserves PNG bytes instead of the picker JPEG rendition
+ok 95 - ios preserves PNG bytes instead of the picker JPEG rendition
+  ---
+  duration_ms: 4.67509
+  type: 'test'
+  ...
+# Subtest: android preserves PNG bytes instead of the picker JPEG rendition
+ok 96 - android preserves PNG bytes instead of the picker JPEG rendition
+  ---
+  duration_ms: 2.446064
+  type: 'test'
+  ...
+# Subtest: web sends large HEIC selection directly to cropper before upload validation
+ok 97 - web sends large HEIC selection directly to cropper before upload validation
+  ---
+  duration_ms: 14.349515
+  type: 'test'
+  ...
+# Subtest: ios sends large HEIC selection directly to cropper before upload validation
+ok 98 - ios sends large HEIC selection directly to cropper before upload validation
+  ---
+  duration_ms: 13.895405
+  type: 'test'
+  ...
+# Subtest: android sends large HEIC selection directly to cropper before upload validation
+ok 99 - android sends large HEIC selection directly to cropper before upload validation
+  ---
+  duration_ms: 5.588887
+  type: 'test'
+  ...
+1..99
+# tests 99
+# suites 0
+# pass 99
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14654.219016

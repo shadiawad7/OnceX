@@ -1,0 +1,15 @@
+{
+  "before_migration_sha256": "725543ebefe166a8f134f8f3aafb9a1a6cf78f8c24373474c77123bc51a98023",
+  "after_migration_sha256": "efe151e97d33e7313a019edd9575c3d6adb2cb343a5d10e40d0d207206156f5c",
+  "original_context_and_budget_unchanged": true,
+  "sql_tests": 30,
+  "sql_pass": 5,
+  "sql_fail": 25,
+  "failures_reproduced_without_ai": true,
+  "node_pass": 99,
+  "deno_pass": 3,
+  "concurrent_postgres_sessions": 16,
+  "provider_calls_real": 0,
+  "remote_operations": 0,
+  "eszip_sha256": "0b403e5853bc04944e26b2f4015cc554400232a627ffa31dd881ece49f432c27"
+}

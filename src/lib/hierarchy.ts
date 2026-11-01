@@ -3,7 +3,7 @@ import { client } from './client';
 import { isMissingPlayerPosition } from './playerDetails';
 export { client } from './client';
 export type ProvisionKind = 'club' | 'team' | 'coach' | 'player';
-export type HierarchyItem = { id: string; name: string; subtitle?: string; role?: string; position?: string; photoUrl?: string };
+export type HierarchyItem = { id: string; name: string; subtitle?: string; role?: string; position?: string; photoUrl?: string; clubName?: string };
 export type ProvisionInput = { kind: ProvisionKind; name: string; email: string; password: string; category?: string; clubId?: string; teamId?: string; coachId?: string };
 export type ProvisionResult = { club_id: string; team_id: string | null; user_id: string; role: string };
 export async function createHierarchyAccount(input: ProvisionInput): Promise<ProvisionResult> {
@@ -46,12 +46,19 @@ export async function listClubs(page: number, search: string) {
  return {items:records.map(row=>({id:row.id,name:row.name,photoUrl:urls.get(row.photo_path??'')})),count:result.count??0};
 }
 export async function listTeams(clubId: string | undefined, page: number, search: string) {
- let query = client().from('teams').select('id,name,category,clubs(name)', { count: 'exact' });
+ let query = client().from('teams').select('id,name,category,clubs(name,photo_path)', { count: 'exact' });
  if (clubId) query = query.eq('club_id', clubId);
  if (search.trim()) query = query.ilike('name', `%${search.trim().replace(/[%_]/g, '')}%`);
  const result = await query.order('name').order('id').range(page * 20, page * 20 + 19);
  if (result.error) throw result.error;
- return { items: (result.data as unknown as { id: string; name: string; category: string; clubs: { name: string } | null }[]).map(row => ({ id: row.id, name: row.name, subtitle: `${row.clubs?.name ?? ''} · ${row.category}` })), count: result.count ?? 0 };
+ const records=result.data as unknown as {id:string;name:string;category:string;clubs:{name:string;photo_path:string|null}|null}[];
+ const paths=[...new Set(records.flatMap(row=>row.clubs?.photo_path?[row.clubs.photo_path]:[]))];
+ const urls=new Map<string,string>();
+ if(paths.length){
+  const signed=await client().storage.from('club-photos').createSignedUrls(paths,3600);
+  if(!signed.error)for(const photo of signed.data)if(photo.path&&photo.signedUrl)urls.set(photo.path,`${photo.signedUrl}&v=${Date.now()}`);
+ }
+ return {items:records.map(row=>({id:row.id,name:row.name,clubName:row.clubs?.name,photoUrl:urls.get(row.clubs?.photo_path??''),subtitle:`${row.clubs?.name??''} · ${row.category}`})),count:result.count??0};
 }
 export async function listTeamPeople(teamId: string, roles: string[], page: number, search: string, coachId?: string) {
  const run = (includePosition: boolean) => {

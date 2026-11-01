@@ -1,0 +1,602 @@
+{
+    "role": "postgres",
+    "stage": "PRECHECK",
+    "database": "postgres",
+    "run_as_postgres": true,
+    "history_versions": [
+    ],
+    "new_policy_absent": true,
+    "new_trigger_absent": true,
+    "history_still_empty": true,
+    "protected_functions": [
+        {
+            "signature": "private.can_manage_match_team(uuid)",
+            "matches_audit": true,
+            "current_definition_md5": "efc5dfbc2378116fe5ec8d87681a0842"
+        },
+        {
+            "signature": "private.card_inputs(text)",
+            "matches_audit": true,
+            "current_definition_md5": "9f8f288a89186092c84b008a1f573883"
+        },
+        {
+            "signature": "private.is_team_coach(uuid)",
+            "matches_audit": true,
+            "current_definition_md5": "b925edb6b494222c1a9088ea1bd6dd31"
+        },
+        {
+            "signature": "private.oncex_points_v2(text,integer,integer,integer,integer,integer,integer,integer,boolean,integer,integer)",
+            "matches_audit": true,
+            "current_definition_md5": "9a7813e192706df37c94798b1f7ba908"
+        },
+        {
+            "signature": "private.refresh_card_season(text)",
+            "matches_audit": true,
+            "current_definition_md5": "32bb24ca28a52e5fd1590de523439df1"
+        },
+        {
+            "signature": "public.confirm_match_statistics_v3(uuid,integer,integer,jsonb,integer,text,text,text)",
+            "matches_audit": true,
+            "current_definition_md5": "e4fb6ff98b374e633677088863b05d0d"
+        },
+        {
+            "signature": "public.player_ovr_evolution(uuid,text)",
+            "matches_audit": true,
+            "current_definition_md5": "62819b3a5af4b96ed80ce461e21ace86"
+        },
+        {
+            "signature": "public.save_match_lineup_v2(uuid,uuid,text,date,integer,uuid[],text,uuid[])",
+            "matches_audit": true,
+            "current_definition_md5": "ebf06d6766797b610db99a9661201272"
+        },
+        {
+            "signature": "public.team_jersey_available(uuid,integer,uuid)",
+            "matches_audit": true,
+            "current_definition_md5": "483eef7f0731f0f9cce1f442485f8585"
+        }
+    ],
+    "new_functions_absent": true,
+    "protected_configuration": {
+        "roles": [
+            {
+                "code": "club_admin",
+                "name": "CLUB ADMIN",
+                "description": "Administra únicamente sus clubes"
+            },
+            {
+                "code": "coach",
+                "name": "ENTRENADOR",
+                "description": "Accede a sus equipos y jugadores"
+            },
+            {
+                "code": "player",
+                "name": "JUGADOR",
+                "description": "Consulta su perfil y sus equipos"
+            },
+            {
+                "code": "super_admin",
+                "name": "SUPER ADMIN",
+                "description": "Gestiona toda la plataforma"
+            },
+            {
+                "code": "team_admin",
+                "name": "ADMIN EQUIPO",
+                "description": "Administra únicamente sus equipos"
+            }
+        ],
+        "oncex_jobs": [
+            {
+                "active": true,
+                "command": "select private.refresh_all_cards();",
+                "jobname": "oncex-card-daily",
+                "database": "postgres",
+                "schedule": "50 21 * * *",
+                "username": "postgres"
+            },
+            {
+                "active": true,
+                "command": "select private.close_ovr_month((date_trunc('month',now() at time zone 'Europe/Madrid')-interval '1 month')::date);",
+                "jobname": "oncex-ovr-monthly-snapshots",
+                "database": "postgres",
+                "schedule": "10 2 1 * *",
+                "username": "postgres"
+            }
+        ],
+        "ovr_models": [
+            {
+                "version": "oncex-card-v1",
+                "approved": true,
+                "created_at": "2026-10-31T16:45:55.154978+00:00",
+                "specification": {
+                    "impact": {
+                        "Defensa": [
+                            6,
+                            4,
+                            3,
+                            4
+                        ],
+                        "Delantero": [
+                            4,
+                            2,
+                            1,
+                            2
+                        ],
+                        "Centrocampista": [
+                            5,
+                            3,
+                            2,
+                            3
+                        ]
+                    },
+                    "neutral": 50,
+                    "overall": {
+                        "Defensa": [
+                            0.10,
+                            0.10,
+                            0.30,
+                            0.15,
+                            0.20,
+                            0.15
+                        ],
+                        "Delantero": [
+                            0.25,
+                            0.15,
+                            0.25,
+                            0.10,
+                            0.10,
+                            0.15
+                        ],
+                        "Centrocampista": [
+                            0.15,
+                            0.25,
+                            0.20,
+                            0.10,
+                            0.15,
+                            0.15
+                        ]
+                    },
+                    "percentile": "midrank, ties at midpoint, 0..99",
+                    "reliable_matches": 10,
+                    "reliable_minutes": 900,
+                    "discipline_red_weight": 3
+                },
+                "minimum_cohort": 1,
+                "minimum_matches": 1,
+                "minimum_minutes": 1
+            },
+            {
+                "version": "oncex-card-v2",
+                "approved": true,
+                "created_at": "2026-10-31T16:45:56.605406+00:00",
+                "specification": {
+                    "neutral": 50,
+                    "overall": {
+                        "Defensa": [
+                            0.10,
+                            0.10,
+                            0.30,
+                            0.15,
+                            0.20,
+                            0.15
+                        ],
+                        "Delantero": [
+                            0.25,
+                            0.15,
+                            0.25,
+                            0.10,
+                            0.10,
+                            0.15
+                        ],
+                        "Centrocampista": [
+                            0.15,
+                            0.25,
+                            0.20,
+                            0.10,
+                            0.15,
+                            0.15
+                        ]
+                    },
+                    "singleton": "neutral percentile; no OVR boost",
+                    "percentile": "midrank, ties at midpoint, 0..99",
+                    "impact_basis": "official_points_rate_times_participation",
+                    "efficiency_basis": "official_points_rate",
+                    "reliable_matches": 10,
+                    "reliable_minutes": 900,
+                    "discipline_red_weight": 3,
+                    "regularity_matches_weight": 0.3,
+                    "regularity_minutes_weight": 0.7
+                },
+                "minimum_cohort": 1,
+                "minimum_matches": 1,
+                "minimum_minutes": 1
+            },
+            {
+                "version": "oncex-card-v3",
+                "approved": true,
+                "created_at": "2026-10-31T16:45:56.94714+00:00",
+                "specification": {
+                    "neutral": 50,
+                    "overall": {
+                        "Defensa": [
+                            0.10,
+                            0.10,
+                            0.30,
+                            0.15,
+                            0.20,
+                            0.15
+                        ],
+                        "Delantero": [
+                            0.25,
+                            0.15,
+                            0.25,
+                            0.10,
+                            0.10,
+                            0.15
+                        ],
+                        "Centrocampista": [
+                            0.15,
+                            0.25,
+                            0.20,
+                            0.10,
+                            0.15,
+                            0.15
+                        ]
+                    },
+                    "singleton": "neutral percentile; no OVR boost",
+                    "percentile": "midrank, ties at midpoint, 0..99",
+                    "impact_basis": "accumulated_official_season_points; participation via existing reliability",
+                    "efficiency_basis": "official_points_rate",
+                    "reliable_matches": 10,
+                    "reliable_minutes": 900,
+                    "discipline_red_weight": 3,
+                    "regularity_matches_weight": 0.3,
+                    "regularity_minutes_weight": 0.7
+                },
+                "minimum_cohort": 1,
+                "minimum_matches": 1,
+                "minimum_minutes": 1
+            }
+        ],
+        "permissions": [
+            {
+                "code": "accounts.create",
+                "description": "Crear cuentas dentro del ámbito asignado"
+            },
+            {
+                "code": "activity.read",
+                "description": "Consultar la actividad general de la plataforma"
+            },
+            {
+                "code": "clubs.read",
+                "description": "Consultar los clubes asignados"
+            },
+            {
+                "code": "members.manage",
+                "description": "Asignar entrenadores y jugadores al club"
+            },
+            {
+                "code": "plans.manage",
+                "description": "Gestionar planes y asignaciones a todos los clubes"
+            },
+            {
+                "code": "platform.manage",
+                "description": "Administrar todos los clubes y roles"
+            },
+            {
+                "code": "profiles.manage",
+                "description": "Gestionar los nombres de todas las cuentas"
+            },
+            {
+                "code": "profiles.read_club",
+                "description": "Consultar perfiles del club"
+            },
+            {
+                "code": "profiles.read_own",
+                "description": "Consultar el perfil propio"
+            },
+            {
+                "code": "profiles.read_team",
+                "description": "Consultar jugadores de los equipos entrenados"
+            },
+            {
+                "code": "profiles.update_own",
+                "description": "Actualizar el nombre propio"
+            },
+            {
+                "code": "teams.assign",
+                "description": "Asignar entrenadores y jugadores a equipos"
+            },
+            {
+                "code": "teams.manage",
+                "description": "Crear y modificar equipos del club"
+            },
+            {
+                "code": "teams.read",
+                "description": "Consultar equipos asignados"
+            }
+        ],
+        "role_permissions": [
+            {
+                "role_code": "club_admin",
+                "permission_code": "accounts.create"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "clubs.read"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "members.manage"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "profiles.read_club"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "profiles.read_own"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "profiles.update_own"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "teams.assign"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "teams.manage"
+            },
+            {
+                "role_code": "club_admin",
+                "permission_code": "teams.read"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "accounts.create"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "clubs.read"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "profiles.read_own"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "profiles.read_team"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "profiles.update_own"
+            },
+            {
+                "role_code": "coach",
+                "permission_code": "teams.read"
+            },
+            {
+                "role_code": "player",
+                "permission_code": "clubs.read"
+            },
+            {
+                "role_code": "player",
+                "permission_code": "profiles.read_own"
+            },
+            {
+                "role_code": "player",
+                "permission_code": "profiles.update_own"
+            },
+            {
+                "role_code": "player",
+                "permission_code": "teams.read"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "accounts.create"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "activity.read"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "clubs.read"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "members.manage"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "plans.manage"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "platform.manage"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "profiles.manage"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "profiles.read_club"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "profiles.read_own"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "profiles.read_team"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "profiles.update_own"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "teams.assign"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "teams.manage"
+            },
+            {
+                "role_code": "super_admin",
+                "permission_code": "teams.read"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "accounts.create"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "clubs.read"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "profiles.read_own"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "profiles.read_team"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "profiles.update_own"
+            },
+            {
+                "role_code": "team_admin",
+                "permission_code": "teams.read"
+            }
+        ],
+        "ovr_category_mapping": [
+            {
+                "category_key": "Juvenil",
+                "team_category": "División de Honor Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Juvenil",
+                "team_category": "Liga Nacional Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Cadete",
+                "team_category": "Lliga Autonòmica Cadet · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Amateur",
+                "team_category": "Lliga Comunitat FFCV · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Juvenil",
+                "team_category": "Lliga Comunitat Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Cadete",
+                "team_category": "Lliga Preferent Cadet · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Amateur",
+                "team_category": "Lliga Primera FFCV · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Juvenil",
+                "team_category": "Lliga Primera FFCV Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Amateur",
+                "team_category": "Lliga Segona FFCV · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Juvenil",
+                "team_category": "Lliga Segona FFCV Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Amateur",
+                "team_category": "Lliga Tercera FFCV · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Juvenil",
+                "team_category": "Lliga Tercera FFCV Juvenil · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Cadete",
+                "team_category": "Primera Cadet · Comunidad Valenciana"
+            },
+            {
+                "category_key": "Cadete",
+                "team_category": "Segona Cadet · Comunidad Valenciana"
+            }
+        ],
+        "match_scoring_weights": [
+            {
+                "red": -4,
+                "goal": 5,
+                "assist": 3,
+                "yellow": -2,
+                "version": "oncex-match-v2",
+                "own_goal": -3,
+                "clean_sheet": 2,
+                "position_name": "Centrocampista"
+            },
+            {
+                "red": -5,
+                "goal": 6,
+                "assist": 4,
+                "yellow": -3,
+                "version": "oncex-match-v2",
+                "own_goal": -4,
+                "clean_sheet": 3,
+                "position_name": "Defensa"
+            },
+            {
+                "red": -3,
+                "goal": 4,
+                "assist": 2,
+                "yellow": -1,
+                "version": "oncex-match-v2",
+                "own_goal": -2,
+                "clean_sheet": 1,
+                "position_name": "Delantero"
+            },
+            {
+                "red": -6,
+                "goal": 8,
+                "assist": 5,
+                "yellow": -4,
+                "version": "oncex-match-v2",
+                "own_goal": -5,
+                "clean_sheet": 4,
+                "position_name": "Portero"
+            }
+        ],
+        "photo_processing_settings": [
+            {
+                "id": true,
+                "background_removal_enabled": true
+            }
+        ]
+    },
+    "existing_functions_match": true,
+    "existing_functions_backup": [
+        {
+            "acl": "{postgres=X/postgres}",
+            "signature": "private.can_provision(uuid,text,uuid,uuid)",
+            "definition": "CREATE OR REPLACE FUNCTION private.can_provision(actor uuid, kind text, target_club uuid, target_team uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select actor is not null and kind in ('club','team','coach','player') and (\n exists(select 1 from public.user_roles where user_id=actor and role_code='super_admin' and club_id is null)\n or (kind='team' and exists(select 1 from public.user_roles where user_id=actor and role_code='club_admin' and club_id=target_club))\n or (kind in ('coach','player') and exists(\n  select 1 from public.teams t where t.id=target_team and t.club_id=target_club and (\n   exists(select 1 from public.user_roles ur where ur.user_id=actor and ur.role_code='club_admin' and ur.club_id=t.club_id)\n   or exists(select 1 from public.team_members tm where tm.team_id=t.id and tm.user_id=actor and (tm.role_code='team_admin' or (kind='player' and tm.role_code='coach')))\n  )\n )));\n$function$\n",
+            "owner_name": "postgres",
+            "matches_audit": true
+        },
+        {
+            "acl": "{postgres=X/postgres,service_role=X/postgres}",
+            "signature": "public.save_match_lineup(uuid,uuid,text,date,integer,uuid[],uuid[])",
+            "definition": "CREATE OR REPLACE FUNCTION public.save_match_lineup(target_team uuid, target_match uuid, opponent_name text, match_date date, match_duration integer, starter_ids uuid[], substitute_ids uuid[] DEFAULT '{}'::uuid[])\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare saved uuid:=target_match; all_players uuid[]; total integer;\nbegin\n if not private.can_manage_match_team(target_team) then raise exception 'No puedes registrar partidos de este equipo.' using errcode='42501';end if;\n -- Serialize roster edits with match creation/confirmation.\n perform 1 from public.teams where id=target_team for update;\n if cardinality(starter_ids) is distinct from 11 or (select count(distinct value) from unnest(starter_ids) value)<>11 then\n  raise exception 'Debes seleccionar exactamente 11 titulares distintos antes de registrar estadísticas.' using errcode='22023';\n end if;\n all_players:=starter_ids||coalesce(substitute_ids,'{}');\n if (select count(distinct value) from unnest(all_players) value)<>cardinality(all_players) then raise exception 'Un jugador no puede estar repetido ni ser titular y suplente.' using errcode='22023';end if;\n select count(*) into total from public.team_members where team_id=target_team and role_code='player' and user_id=any(all_players);\n if total<>cardinality(all_players) then raise exception 'Todos los jugadores deben estar registrados en este equipo.' using errcode='22023';end if;\n if opponent_name is null or length(trim(opponent_name)) not between 1 and 120 or match_date is null or match_duration is null or match_duration not between 1 and 150 then\n  raise exception 'Completa rival, fecha y duración del partido.' using errcode='22023';end if;\n if saved is null then\n  insert into public.team_matches(team_id,opponent,played_on,duration,created_by) values(target_team,trim(opponent_name),match_date,match_duration,auth.uid()) returning id into saved;\n else\n  perform 1 from public.team_matches where id=saved and team_id=target_team and status='draft' for update;\n  if not found then raise exception 'El partido no existe o ya está confirmado.' using errcode='22023';end if;\n  update public.team_matches set opponent=trim(opponent_name),played_on=match_date,duration=match_duration where id=saved;\n  delete from public.match_players where match_id=saved;\n end if;\n insert into public.match_players(match_id,player_id,player_name,player_position,starter)\n select saved,p.id,p.full_name,coalesce(p.position,''),p.id=any(starter_ids) from public.profiles p where p.id=any(all_players);\n return saved;\nend;\n$function$\n",
+            "owner_name": "postgres",
+            "matches_audit": true
+        }
+    ],
+    "protected_functions_match": true,
+    "public_function_defaults_match": true
+}

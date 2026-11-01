@@ -1,0 +1,572 @@
+{
+    "roles": [
+        {
+            "code": "club_admin",
+            "name": "CLUB ADMIN",
+            "description": "Administra únicamente sus clubes"
+        },
+        {
+            "code": "coach",
+            "name": "ENTRENADOR",
+            "description": "Accede a sus equipos y jugadores"
+        },
+        {
+            "code": "player",
+            "name": "JUGADOR",
+            "description": "Consulta su perfil y sus equipos"
+        },
+        {
+            "code": "super_admin",
+            "name": "SUPER ADMIN",
+            "description": "Gestiona toda la plataforma"
+        },
+        {
+            "code": "team_admin",
+            "name": "ADMIN EQUIPO",
+            "description": "Administra únicamente sus equipos"
+        }
+    ],
+    "ovr_models": [
+        {
+            "version": "oncex-card-v1",
+            "approved": true,
+            "specification": {
+                "impact": {
+                    "Defensa": [
+                        6,
+                        4,
+                        3,
+                        4
+                    ],
+                    "Delantero": [
+                        4,
+                        2,
+                        1,
+                        2
+                    ],
+                    "Centrocampista": [
+                        5,
+                        3,
+                        2,
+                        3
+                    ]
+                },
+                "neutral": 50,
+                "overall": {
+                    "Defensa": [
+                        0.10,
+                        0.10,
+                        0.30,
+                        0.15,
+                        0.20,
+                        0.15
+                    ],
+                    "Delantero": [
+                        0.25,
+                        0.15,
+                        0.25,
+                        0.10,
+                        0.10,
+                        0.15
+                    ],
+                    "Centrocampista": [
+                        0.15,
+                        0.25,
+                        0.20,
+                        0.10,
+                        0.15,
+                        0.15
+                    ]
+                },
+                "percentile": "midrank, ties at midpoint, 0..99",
+                "reliable_matches": 10,
+                "reliable_minutes": 900,
+                "discipline_red_weight": 3
+            },
+            "minimum_cohort": 1,
+            "minimum_matches": 1,
+            "minimum_minutes": 1
+        },
+        {
+            "version": "oncex-card-v2",
+            "approved": true,
+            "specification": {
+                "neutral": 50,
+                "overall": {
+                    "Defensa": [
+                        0.10,
+                        0.10,
+                        0.30,
+                        0.15,
+                        0.20,
+                        0.15
+                    ],
+                    "Delantero": [
+                        0.25,
+                        0.15,
+                        0.25,
+                        0.10,
+                        0.10,
+                        0.15
+                    ],
+                    "Centrocampista": [
+                        0.15,
+                        0.25,
+                        0.20,
+                        0.10,
+                        0.15,
+                        0.15
+                    ]
+                },
+                "singleton": "neutral percentile; no OVR boost",
+                "percentile": "midrank, ties at midpoint, 0..99",
+                "impact_basis": "official_points_rate_times_participation",
+                "efficiency_basis": "official_points_rate",
+                "reliable_matches": 10,
+                "reliable_minutes": 900,
+                "discipline_red_weight": 3,
+                "regularity_matches_weight": 0.3,
+                "regularity_minutes_weight": 0.7
+            },
+            "minimum_cohort": 1,
+            "minimum_matches": 1,
+            "minimum_minutes": 1
+        },
+        {
+            "version": "oncex-card-v3",
+            "approved": true,
+            "specification": {
+                "neutral": 50,
+                "overall": {
+                    "Defensa": [
+                        0.10,
+                        0.10,
+                        0.30,
+                        0.15,
+                        0.20,
+                        0.15
+                    ],
+                    "Delantero": [
+                        0.25,
+                        0.15,
+                        0.25,
+                        0.10,
+                        0.10,
+                        0.15
+                    ],
+                    "Centrocampista": [
+                        0.15,
+                        0.25,
+                        0.20,
+                        0.10,
+                        0.15,
+                        0.15
+                    ]
+                },
+                "singleton": "neutral percentile; no OVR boost",
+                "percentile": "midrank, ties at midpoint, 0..99",
+                "impact_basis": "accumulated_official_season_points; participation via existing reliability",
+                "efficiency_basis": "official_points_rate",
+                "reliable_matches": 10,
+                "reliable_minutes": 900,
+                "discipline_red_weight": 3,
+                "regularity_matches_weight": 0.3,
+                "regularity_minutes_weight": 0.7
+            },
+            "minimum_cohort": 1,
+            "minimum_matches": 1,
+            "minimum_minutes": 1
+        }
+    ],
+    "permissions": [
+        {
+            "code": "accounts.create",
+            "description": "Crear cuentas dentro del ámbito asignado"
+        },
+        {
+            "code": "activity.read",
+            "description": "Consultar la actividad general de la plataforma"
+        },
+        {
+            "code": "clubs.read",
+            "description": "Consultar los clubes asignados"
+        },
+        {
+            "code": "members.manage",
+            "description": "Asignar entrenadores y jugadores al club"
+        },
+        {
+            "code": "plans.manage",
+            "description": "Gestionar planes y asignaciones a todos los clubes"
+        },
+        {
+            "code": "platform.manage",
+            "description": "Administrar todos los clubes y roles"
+        },
+        {
+            "code": "profiles.manage",
+            "description": "Gestionar los nombres de todas las cuentas"
+        },
+        {
+            "code": "profiles.read_club",
+            "description": "Consultar perfiles del club"
+        },
+        {
+            "code": "profiles.read_own",
+            "description": "Consultar el perfil propio"
+        },
+        {
+            "code": "profiles.read_team",
+            "description": "Consultar jugadores de los equipos entrenados"
+        },
+        {
+            "code": "profiles.update_own",
+            "description": "Actualizar el nombre propio"
+        },
+        {
+            "code": "teams.assign",
+            "description": "Asignar entrenadores y jugadores a equipos"
+        },
+        {
+            "code": "teams.manage",
+            "description": "Crear y modificar equipos del club"
+        },
+        {
+            "code": "teams.read",
+            "description": "Consultar equipos asignados"
+        }
+    ],
+    "collected_at": "2026-10-31T15:39:53.174347+00:00",
+    "photo_buckets": [
+        {
+            "id": "club-photos",
+            "name": "club-photos",
+            "public": false,
+            "file_size_limit": 5242880,
+            "allowed_mime_types": [
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ]
+        },
+        {
+            "id": "profile-photos",
+            "name": "profile-photos",
+            "public": false,
+            "file_size_limit": 5242880,
+            "allowed_mime_types": [
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ]
+        }
+    ],
+    "backfill_counts": {
+        "profiles_without_any_role": 0,
+        "auth_users_without_profile": 0,
+        "current_players_without_identity": 0
+    },
+    "oncex_cron_jobs": [
+        {
+            "active": true,
+            "command": "select private.refresh_all_cards();",
+            "jobname": "oncex-card-daily",
+            "database": "postgres",
+            "schedule": "50 21 * * *",
+            "username": "postgres"
+        },
+        {
+            "active": true,
+            "command": "select private.close_ovr_month((date_trunc('month',now() at time zone 'Europe/Madrid')-interval '1 month')::date);",
+            "jobname": "oncex-ovr-monthly-snapshots",
+            "database": "postgres",
+            "schedule": "10 2 1 * *",
+            "username": "postgres"
+        }
+    ],
+    "role_permissions": [
+        {
+            "role_code": "club_admin",
+            "permission_code": "accounts.create"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "clubs.read"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "members.manage"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "profiles.read_club"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "profiles.read_own"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "profiles.update_own"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "teams.assign"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "teams.manage"
+        },
+        {
+            "role_code": "club_admin",
+            "permission_code": "teams.read"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "accounts.create"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "clubs.read"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "profiles.read_own"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "profiles.read_team"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "profiles.update_own"
+        },
+        {
+            "role_code": "coach",
+            "permission_code": "teams.read"
+        },
+        {
+            "role_code": "player",
+            "permission_code": "clubs.read"
+        },
+        {
+            "role_code": "player",
+            "permission_code": "profiles.read_own"
+        },
+        {
+            "role_code": "player",
+            "permission_code": "profiles.update_own"
+        },
+        {
+            "role_code": "player",
+            "permission_code": "teams.read"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "accounts.create"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "activity.read"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "clubs.read"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "members.manage"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "plans.manage"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "platform.manage"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "profiles.manage"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "profiles.read_club"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "profiles.read_own"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "profiles.read_team"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "profiles.update_own"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "teams.assign"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "teams.manage"
+        },
+        {
+            "role_code": "super_admin",
+            "permission_code": "teams.read"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "accounts.create"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "clubs.read"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "profiles.read_own"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "profiles.read_team"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "profiles.update_own"
+        },
+        {
+            "role_code": "team_admin",
+            "permission_code": "teams.read"
+        }
+    ],
+    "ovr_category_mapping": [
+        {
+            "category_key": "Juvenil",
+            "team_category": "División de Honor Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Juvenil",
+            "team_category": "Liga Nacional Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Cadete",
+            "team_category": "Lliga Autonòmica Cadet · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Amateur",
+            "team_category": "Lliga Comunitat FFCV · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Juvenil",
+            "team_category": "Lliga Comunitat Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Cadete",
+            "team_category": "Lliga Preferent Cadet · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Amateur",
+            "team_category": "Lliga Primera FFCV · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Juvenil",
+            "team_category": "Lliga Primera FFCV Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Amateur",
+            "team_category": "Lliga Segona FFCV · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Juvenil",
+            "team_category": "Lliga Segona FFCV Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Amateur",
+            "team_category": "Lliga Tercera FFCV · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Juvenil",
+            "team_category": "Lliga Tercera FFCV Juvenil · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Cadete",
+            "team_category": "Primera Cadet · Comunidad Valenciana"
+        },
+        {
+            "category_key": "Cadete",
+            "team_category": "Segona Cadet · Comunidad Valenciana"
+        }
+    ],
+    "match_scoring_weights": [
+        {
+            "red": -4,
+            "goal": 5,
+            "assist": 3,
+            "yellow": -2,
+            "version": "oncex-match-v2",
+            "own_goal": -3,
+            "clean_sheet": 2,
+            "position_name": "Centrocampista"
+        },
+        {
+            "red": -5,
+            "goal": 6,
+            "assist": 4,
+            "yellow": -3,
+            "version": "oncex-match-v2",
+            "own_goal": -4,
+            "clean_sheet": 3,
+            "position_name": "Defensa"
+        },
+        {
+            "red": -3,
+            "goal": 4,
+            "assist": 2,
+            "yellow": -1,
+            "version": "oncex-match-v2",
+            "own_goal": -2,
+            "clean_sheet": 1,
+            "position_name": "Delantero"
+        },
+        {
+            "red": -6,
+            "goal": 8,
+            "assist": 5,
+            "yellow": -4,
+            "version": "oncex-match-v2",
+            "own_goal": -5,
+            "clean_sheet": 4,
+            "position_name": "Portero"
+        }
+    ],
+    "monthly_history_summary": null,
+    "photo_processing_settings": [
+        {
+            "id": true,
+            "background_removal_enabled": true
+        }
+    ],
+    "assessment_history_summary": [
+        {
+            "model_version": "oncex-card-v1",
+            "assessment_count": 22,
+            "last_assessed_at": "2026-10-23T16:48:29.018346+00:00",
+            "first_assessed_at": "2026-10-23T16:45:01.743363+00:00"
+        },
+        {
+            "model_version": "oncex-card-v2",
+            "assessment_count": 11,
+            "last_assessed_at": "2026-10-23T17:14:51.91248+00:00",
+            "first_assessed_at": "2026-10-23T17:14:51.901495+00:00"
+        },
+        {
+            "model_version": "oncex-card-v3",
+            "assessment_count": 99,
+            "last_assessed_at": "2026-10-30T21:50:00.404378+00:00",
+            "first_assessed_at": "2026-10-23T17:58:56.40369+00:00"
+        }
+    ]
+}

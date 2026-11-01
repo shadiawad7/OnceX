@@ -1,0 +1,135 @@
+--- before
+
++++ after
+
+@@ -101,7 +101,7 @@
+
+  or (kind in ('coach','player') and exists(
+   select 1 from public.teams t where t.id=target_team and t.club_id=target_club and (
+    exists(select 1 from public.user_roles ur where ur.user_id=actor and ur.role_code='club_admin' and ur.club_id=t.club_id)
+-   or exists(select 1 from public.team_members tm where tm.team_id=t.id and tm.user_id=actor and (tm.role_code='team_admin' or (kind='player' and tm.role_code='coach')))
++   or exists(select 1 from public.team_members tm where tm.team_id=t.id and tm.user_id=actor and tm.role_code in ('team_admin','coach'))
+   )
+  )));
+ $$;
+@@ -689,6 +689,22 @@
+
+ 
+ 
+ ALTER FUNCTION private.renew_team_plan(target_team uuid) OWNER TO postgres;
++
++--
++-- Name: require_starting_goalkeeper(); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.require_starting_goalkeeper() RETURNS trigger
++    LANGUAGE plpgsql SECURITY DEFINER
++    SET search_path TO ''
++    AS $$
++begin
++ if new.status='confirmed' and not exists(select 1 from public.match_players where match_id=new.id and starter and player_position='Portero') then raise exception 'Los 11 titulares deben incluir al menos un portero.' using errcode='22023';end if;
++ return new;
++end;$$;
++
++
++ALTER FUNCTION private.require_starting_goalkeeper() OWNER TO postgres;
+ 
+ --
+ -- Name: stop_deleted_player_licences(); Type: FUNCTION; Schema: private; Owner: postgres
+@@ -1340,6 +1356,7 @@
+
+  if (select count(distinct value) from unnest(all_players) value)<>cardinality(all_players) then raise exception 'Un jugador no puede estar repetido ni ser titular y suplente.' using errcode='22023';end if;
+  select count(*) into total from public.team_members where team_id=target_team and role_code='player' and user_id=any(all_players);
+  if total<>cardinality(all_players) then raise exception 'Todos los jugadores deben estar registrados en este equipo.' using errcode='22023';end if;
++ if not exists(select 1 from public.profiles where id=any(starter_ids) and position='Portero') then raise exception 'Los 11 titulares deben incluir al menos un portero.' using errcode='22023';end if;
+  if opponent_name is null or length(trim(opponent_name)) not between 1 and 120 or match_date is null or match_duration is null or match_duration not between 1 and 150 then
+   raise exception 'Completa rival, fecha y duración del partido.' using errcode='22023';end if;
+  if saved is null then
+@@ -1482,6 +1499,22 @@
+
+ 
+ 
+ ALTER FUNCTION public.team_jersey_available(target_team uuid, jersey integer, excluded_player uuid) OWNER TO postgres;
++
++--
++-- Name: team_jersey_numbers(uuid, uuid); Type: FUNCTION; Schema: public; Owner: postgres
++--
++
++CREATE FUNCTION public.team_jersey_numbers(target_team uuid, excluded_player uuid DEFAULT NULL::uuid) RETURNS integer[]
++    LANGUAGE plpgsql STABLE SECURITY DEFINER
++    SET search_path TO ''
++    AS $$
++begin
++ perform public.team_jersey_available(target_team,1,excluded_player);
++ return(select coalesce(array_agg(distinct p.jersey_number),'{}'::integer[]) from public.team_members tm join public.profiles p on p.id=tm.user_id where tm.team_id=target_team and tm.role_code='player' and p.id is distinct from excluded_player and p.jersey_number is not null);
++end;$$;
++
++
++ALTER FUNCTION public.team_jersey_numbers(target_team uuid, excluded_player uuid) OWNER TO postgres;
+ 
+ SET default_tablespace = '';
+ 
+@@ -2349,6 +2382,13 @@
+
+ 
+ 
+ --
++-- Name: team_matches match_requires_goalkeeper; Type: TRIGGER; Schema: public; Owner: postgres
++--
++
++CREATE TRIGGER match_requires_goalkeeper BEFORE UPDATE ON public.team_matches FOR EACH ROW EXECUTE FUNCTION private.require_starting_goalkeeper();
++
++
++--
+ -- Name: club_subscriptions oncex_activity; Type: TRIGGER; Schema: public; Owner: postgres
+ --
+ 
+@@ -2996,6 +3036,15 @@
+
+ 
+ 
+ --
++-- Name: teams teams_update_assigned_coach; Type: POLICY; Schema: public; Owner: postgres
++--
++
++CREATE POLICY teams_update_assigned_coach ON public.teams FOR UPDATE TO authenticated USING (private.is_team_coach(id)) WITH CHECK ((private.is_team_coach(id) AND (EXISTS ( SELECT 1
++   FROM public.team_members tm
++  WHERE ((tm.team_id = teams.id) AND (tm.club_id = teams.club_id) AND (tm.user_id = ( SELECT auth.uid() AS uid)) AND (tm.role_code = 'coach'::text))))));
++
++
++--
+ -- Name: user_roles; Type: ROW SECURITY; Schema: public; Owner: postgres
+ --
+ 
+@@ -3264,6 +3313,13 @@
+
+ 
+ 
+ --
++-- Name: FUNCTION require_starting_goalkeeper(); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.require_starting_goalkeeper() FROM PUBLIC;
++
++
++--
+ -- Name: FUNCTION stop_deleted_player_licences(); Type: ACL; Schema: private; Owner: postgres
+ --
+ 
+@@ -3511,6 +3567,15 @@
+
+ REVOKE ALL ON FUNCTION public.team_jersey_available(target_team uuid, jersey integer, excluded_player uuid) FROM PUBLIC;
+ GRANT ALL ON FUNCTION public.team_jersey_available(target_team uuid, jersey integer, excluded_player uuid) TO authenticated;
+ GRANT ALL ON FUNCTION public.team_jersey_available(target_team uuid, jersey integer, excluded_player uuid) TO service_role;
++
++
++--
++-- Name: FUNCTION team_jersey_numbers(target_team uuid, excluded_player uuid); Type: ACL; Schema: public; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION public.team_jersey_numbers(target_team uuid, excluded_player uuid) FROM PUBLIC;
++GRANT ALL ON FUNCTION public.team_jersey_numbers(target_team uuid, excluded_player uuid) TO authenticated;
++GRANT ALL ON FUNCTION public.team_jersey_numbers(target_team uuid, excluded_player uuid) TO service_role;
+ 
+ 
+ --

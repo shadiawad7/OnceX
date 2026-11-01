@@ -1,0 +1,13 @@
+{
+  "schema.sql": {
+    "before_sha256": "75620e8ab4920279f26ddfabf8f69900818ae0bccf4b56291897ae2b3694652d",
+    "after_rollback_sha256": "75620e8ab4920279f26ddfabf8f69900818ae0bccf4b56291897ae2b3694652d",
+    "identical": true
+  },
+  "data.json": {
+    "before_sha256": "0ba2090ae121f61b2744f9ece5f3d1fb9b8f2e0d9accb70a6b653e2a9db98adb",
+    "after_rollback_sha256": "0ba2090ae121f61b2744f9ece5f3d1fb9b8f2e0d9accb70a6b653e2a9db98adb",
+    "identical": true
+  },
+  "data_after_patch_identical": true
+}

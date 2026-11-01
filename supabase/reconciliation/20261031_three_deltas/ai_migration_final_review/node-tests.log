@@ -1,0 +1,178 @@
+TAP version 13
+# Subtest: unknowns remain null, and source is not mutated
+ok 1 - unknowns remain null, and source is not mutated
+  ---
+  duration_ms: 20.671948
+  type: 'test'
+  ...
+# Subtest: strict schema rejects extra scores, foreign players/candidates, invalid dates and nonintegers
+ok 2 - strict schema rejects extra scores, foreign players/candidates, invalid dates and nonintegers
+  ---
+  duration_ms: 21.719883
+  type: 'test'
+  ...
+# Subtest: unique exact first name may match; ambiguous first name must be selected
+ok 3 - unique exact first name may match; ambiguous first name must be selected
+  ---
+  duration_ms: 13.45128
+  type: 'test'
+  ...
+# Subtest: fuzzy, uncertain and invented mentions cannot silently select a player
+ok 4 - fuzzy, uncertain and invented mentions cannot silently select a player
+  ---
+  duration_ms: 3.091738
+  type: 'test'
+  ...
+# Subtest: duplicates, impossible minutes, unplayed actions and inconsistent result are surfaced
+ok 5 - duplicates, impossible minutes, unplayed actions and inconsistent result are surfaced
+  ---
+  duration_ms: 4.035413
+  type: 'test'
+  ...
+# Subtest: unauthenticated and unauthorized requests never reach OpenAI
+ok 6 - unauthenticated and unauthorized requests never reach OpenAI
+  ---
+  duration_ms: 1554.319803
+  type: 'test'
+  ...
+# Subtest: budget, invalid body and missing server secret fail without provider calls
+ok 7 - budget, invalid body and missing server secret fail without provider calls
+  ---
+  duration_ms: 932.881815
+  type: 'test'
+  ...
+# Subtest: valid request returns a validated draft, uses server roster, and never writes official data
+ok 8 - valid request returns a validated draft, uses server roster, and never writes official data
+  ---
+  duration_ms: 145.294
+  type: 'test'
+  ...
+# Subtest: several players, home/away result and every supported action survive interpretation and validation
+ok 9 - several players, home/away result and every supported action survive interpretation and validation
+  ---
+  duration_ms: 113.676236
+  type: 'test'
+  ...
+# Subtest: a named player outside the roster stays unresolved without creating an account
+ok 10 - a named player outside the roster stays unresolved without creating an account
+  ---
+  duration_ms: 91.5035
+  type: 'test'
+  ...
+# Subtest: invalid, refused, truncated or failed model response returns no draft and no secret
+ok 11 - invalid, refused, truncated or failed model response returns no draft and no secret
+  ---
+  duration_ms: 361.611186
+  type: 'test'
+  ...
+# Subtest: one recording transcribes once and interprets once; both draft and transcript are reviewable
+ok 12 - one recording transcribes once and interprets once; both draft and transcript are reviewable
+  ---
+  duration_ms: 77.946479
+  type: 'test'
+  ...
+# Subtest: empty, wrongly typed and corrupt audio never reach the provider
+ok 13 - empty, wrongly typed and corrupt audio never reach the provider
+  ---
+  duration_ms: 152.26535
+  type: 'test'
+  ...
+# Subtest: empty transcription prevents interpretation
+ok 14 - empty transcription prevents interpretation
+  ---
+  duration_ms: 100.747508
+  type: 'test'
+  ...
+# Subtest: failed interpretation preserves transcript so the coach can continue manually
+ok 15 - failed interpretation preserves transcript so the coach can continue manually
+  ---
+  duration_ms: 91.816784
+  type: 'test'
+  ...
+# Subtest: timeout and OpenAI rate limit produce recoverable messages without official writes
+ok 16 - timeout and OpenAI rate limit produce recoverable messages without official writes
+  ---
+  duration_ms: 128.691099
+  type: 'test'
+  ...
+# Subtest: model is configurable only from server environment
+ok 17 - model is configurable only from server environment
+  ---
+  duration_ms: 62.175772
+  type: 'test'
+  ...
+# Subtest: review blocks unresolved identities, duplicate players and unreported actions
+ok 18 - review blocks unresolved identities, duplicate players and unreported actions
+  ---
+  duration_ms: 1.91921
+  type: 'test'
+  ...
+# Subtest: reviewed statistics bind to server slots without inventing minutes or changing starter identity
+ok 19 - reviewed statistics bind to server slots without inventing minutes or changing starter identity
+  ---
+  duration_ms: 3.194504
+  type: 'test'
+  ...
+# Subtest: manual registration is unchanged when no AI draft is applied
+ok 20 - manual registration is unchanged when no AI draft is applied
+  ---
+  duration_ms: 0.542312
+  type: 'test'
+  ...
+# Subtest: mobile sends only text and team ID to authenticated backend, never a provider model/key
+ok 21 - mobile sends only text and team ID to authenticated backend, never a provider model/key
+  ---
+  duration_ms: 47.640484
+  type: 'test'
+  ...
+# Subtest: mobile network failures and partial voice failures remain recoverable
+ok 22 - mobile network failures and partial voice failures remain recoverable
+  ---
+  duration_ms: 56.695017
+  type: 'test'
+  ...
+# Subtest: duplicate completed text replays the same result without provider calls or quota
+ok 23 - duplicate completed text replays the same result without provider calls or quota
+  ---
+  duration_ms: 132.024853
+  type: 'test'
+  ...
+# Subtest: concurrent requests across separate handler instances reserve one processing attempt
+ok 24 - concurrent requests across separate handler instances reserve one processing attempt
+  ---
+  duration_ms: 129.524127
+  type: 'test'
+  ...
+# Subtest: multipart boundaries do not change the audio identity; cached transcript/draft are reused
+ok 25 - multipart boundaries do not change the audio identity; cached transcript/draft are reused
+  ---
+  duration_ms: 60.561399
+  type: 'test'
+  ...
+# Subtest: provider failure is cached; repeated failures never repeat paid processing
+ok 26 - provider failure is cached; repeated failures never repeat paid processing
+  ---
+  duration_ms: 42.163586
+  type: 'test'
+  ...
+# Subtest: lost completion write leaves a reservation and never takes over processing
+ok 27 - lost completion write leaves a reservation and never takes over processing
+  ---
+  duration_ms: 46.895986
+  type: 'test'
+  ...
+# Subtest: different reports are different explicit operations
+ok 28 - different reports are different explicit operations
+  ---
+  duration_ms: 68.498205
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5673.38403

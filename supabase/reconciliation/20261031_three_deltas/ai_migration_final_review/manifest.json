@@ -1,0 +1,11 @@
+{
+  "status": "LISTO PARA DRY-RUN DE PRODUCCI\u00d3N",
+  "migration": "supabase/migrations/202610300001_ai_match_drafts.sql",
+  "sha256": "15a17ed02478da22ffaff8213a69db8d40cb96c91d7b062ca97d07eacabf24b3",
+  "previous_review_sha256": "efe151e97d33e7313a019edd9575c3d6adb2cb343a5d10e40d0d207206156f5c",
+  "remote_operations": 0,
+  "ai_node_tests_passed": 28,
+  "sql_concurrent_sessions": 16,
+  "typecheck_exit": 0,
+  "lint_exit": 0
+}

@@ -4,6 +4,6 @@ import { colors } from '../theme/colors';
 // Image blur uses a radius rather than a percentage; 10 gives a moderate softening.
 export const SCREEN_BACKGROUND_BLUR = 10;
 export default function ScreenBackground({children}:{children:ReactNode}) {
- return <View style={styles.background}><Image source={require('../../assets/bg_resto.png')} resizeMode="cover" blurRadius={SCREEN_BACKGROUND_BLUR} style={StyleSheet.absoluteFill} accessible={false} pointerEvents="none"/>{children}</View>;
+ return <View style={styles.background}><Image source={require('../../assets/bg_resto.png')} resizeMode="cover" blurRadius={SCREEN_BACKGROUND_BLUR} style={styles.image} accessible={false} pointerEvents="none"/>{children}</View>;
 }
-const styles=StyleSheet.create({background:{flex:1,backgroundColor:colors.background}});
+const styles=StyleSheet.create({image:{position:'absolute',top:0,left:0,width:'100%',height:'100%'},background:{flex:1,backgroundColor:colors.background}});

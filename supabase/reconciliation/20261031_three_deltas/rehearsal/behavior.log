@@ -1,0 +1,20 @@
+BEGIN
+SELECT 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+927fb4b8-301e-4e7a-93c1-8c2014b83477
+SELECT 12
+INSERT 0 12
+UPDATE 12
+INSERT 0 12
+INSERT 0 12
+DO
+GRANT
+SET
+DO
+ROLLBACK
+NOTICE:  PASS: provisioning scope, jersey listing/exclusion/access, v2 lineup goalkeeper validation, valid lineup, confirmation trigger
+NOTICE:  PASS: assigned-coach RLS update; foreign-team update blocked

@@ -1,0 +1,1 @@
+PASS: postgres NOSUPERUSER/NOBYPASSRLS; cron owned by supabase_admin; SELECT-only; original LOCK denied; atomic rollback; named collision preserved; 2 concurrent migrations -> 1 success/1 abort and 1 unnamed job; concurrent unrelated writer preserved; existing jobs unchanged; registry RLS/ACL; cleanup; AI SQL official-flow test.

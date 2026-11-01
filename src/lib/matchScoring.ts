@@ -9,7 +9,7 @@ export const MATCH_POINTS={
 export type ScoringPosition=keyof typeof MATCH_POINTS;
 export type ScoringInput={venue?:'home'|'away'|null;position:ScoringPosition;duration:number;minutes:number;goals:number;ownGoals:number;assists:number;yellowCards:number;redCards:number;teamGoals:number;opponentGoals:number;concededWhilePlaying:number};
 export function participationThreshold(duration:number){return Math.round(duration*2/3);}
-export function cleanSheetThreshold(duration:number){return Math.ceil(duration*0.6);}
+export function cleanSheetThreshold(_duration:number){return 60;}
 export function matchPointBreakdown(input:ScoringInput){
  const values=[input.duration,input.minutes,input.goals,input.ownGoals,input.assists,input.yellowCards,input.redCards,input.teamGoals,input.opponentGoals,input.concededWhilePlaying];
  if(values.some(value=>!Number.isInteger(value)||value<0)||input.duration<1||input.minutes>input.duration||input.concededWhilePlaying>input.opponentGoals||input.yellowCards>2||input.redCards>1)throw new Error('Datos de partido no válidos.');
