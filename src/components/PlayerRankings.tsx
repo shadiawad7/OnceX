@@ -88,7 +88,7 @@ export default function PlayerRankings({ clubId, teamId, viewerPlayerId, canOpen
  }}/></View>;
 }
 const styles=StyleSheet.create({
- podiumSection:{alignSelf:'stretch',marginHorizontal:-8,alignItems:'center',marginTop:12,marginBottom:26},podiumRunners:{flexDirection:'row',alignItems:'flex-start',justifyContent:'center',gap:2},teamPodium:{marginTop:16},
+ podiumSection:{alignSelf:'stretch',marginHorizontal:-8,alignItems:'center',marginTop:18,marginBottom:26,paddingTop:28,paddingBottom:18,borderRadius:30,backgroundColor:'rgba(7,7,10,0.94)',borderTopWidth:1,borderTopColor:'rgba(255,255,255,0.08)',borderBottomWidth:1,borderBottomColor:'rgba(255,255,255,0.06)'},podiumRunners:{flexDirection:'row',alignItems:'flex-start',justifyContent:'center',gap:2},teamPodium:{marginTop:16},
  medalRing:{position:'absolute',top:3,bottom:3,left:3,right:3,borderRadius:30,borderWidth:1,borderColor:'rgba(65,35,8,0.4)',borderTopColor:'rgba(255,255,255,0.8)',borderLeftColor:'rgba(255,255,255,0.6)'},
  integratedPortrait:{position:'absolute',top:-12,bottom:-6,left:5,right:5,backgroundColor:'transparent',zIndex:2},photoBlend:{position:'absolute',top:0,bottom:0,left:0,right:0,zIndex:3},
  proLabel:{color:'#D9B45D',fontSize:8,fontWeight:'900',textAlign:'center',marginTop:3},

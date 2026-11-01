@@ -17,7 +17,7 @@ const metals={1:['#FFF1B5','#D8B65E','#715120'],2:['#F1F5FA','#B4C0CE','#505E70'
 export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180}:{player?:RankingPlayer;place:1|2|3;canOpen:boolean;onOpen:()=>void;width?:number}){
  const id=useId().replace(/:/g,'');
  const scale=(width/BASE_CARD_WIDTH)*Math.max(1,PODIUM_CARD_SIZE_PERCENT)/100;
- const height=place===1?328:312;
+ const height=place===1?364:340;
  const shades=metals[place];
  const opacity=Math.min(100,Math.max(0,{1:podiumGoldColorPercent,2:podiumSilverColorPercent,3:podiumBronzeColorPercent}[place]))/100;
  const shadow=Math.min(100,Math.max(0,podiumShadowOpacityPercent))/100;
@@ -48,6 +48,7 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
    </Svg>
   </View>
   <View style={[styles.placeBadge,{borderColor:shades[1],backgroundColor:shades[2]}]}><View style={[styles.placeBadgeInner,{borderColor:shades[0]+'80'}]}><Text maxFontSizeMultiplier={1} style={[styles.place,{color:shades[0]}]}>{place}</Text></View></View>
+  <MaterialCommunityIcons pointerEvents="none" name="shield-star" size={235} color={shades[0]} style={styles.watermark}/>
   <View style={styles.photo}><ProfilePortrait key={player?.photo_url??player?.player_id??'empty'} url={player?.photo_url} name={player?.full_name??''} style={styles.portrait} alignTop/></View>
   <NameGradient colors={['transparent',shades[2]+'D9','#191A23']} locations={[0,0.6,1]} style={[styles.nameBand,{borderBottomColor:shades[1]}]}>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} maxFontSizeMultiplier={1} style={styles.name}>{player?.full_name?.trim().split(/\s+/)[0]?.toLocaleUpperCase('es')||'Pendiente'}</Text>
@@ -59,14 +60,15 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
 const styles=StyleSheet.create({
  card:{position:'absolute',left:0,transformOrigin:'top left'},
  crown:{position:'absolute',top:-30,alignSelf:'center'},
- placeBadge:{position:'absolute',top:'8%',left:'12%',width:44,height:44,borderRadius:22,borderWidth:2,alignItems:'center',justifyContent:'center'},
+ placeBadge:{position:'absolute',zIndex:10,top:'7%',left:'10%',width:48,height:48,borderRadius:24,borderWidth:2,alignItems:'center',justifyContent:'center'},
  placeBadgeInner:{width:35,height:35,borderRadius:18,borderWidth:1,alignItems:'center',justifyContent:'center'},
  place:{fontSize:25,lineHeight:30,fontWeight:'900',textAlign:'center'},
- photo:{position:'absolute',top:'22%',bottom:'24%',left:'8%',right:'8%',overflow:'hidden'},
- portrait:{width:'100%',height:'100%',backgroundColor:'transparent'},
- nameBand:{position:'absolute',left:'9%',right:'9%',bottom:'24%',height:76,justifyContent:'flex-end',paddingHorizontal:6,paddingBottom:9,borderBottomWidth:1},
- name:{color:'#FFFFFF',fontSize:23,lineHeight:28,fontWeight:'900',letterSpacing:0.8,textAlign:'center'},
- identity:{position:'absolute',top:'78%',left:'12%',right:'12%',alignItems:'center'},
+ watermark:{position:'absolute',zIndex:1,top:'17%',alignSelf:'center',opacity:0.1},
+ photo:{position:'absolute',zIndex:2,top:'20%',bottom:'25%',left:'4%',right:'4%',overflow:'hidden'},
+ portrait:{width:'108%',height:'108%',marginLeft:'-4%',marginTop:'-2%',backgroundColor:'transparent'},
+ nameBand:{position:'absolute',left:'7%',right:'7%',bottom:'24%',height:82,justifyContent:'flex-end',paddingHorizontal:6,paddingBottom:10,borderBottomWidth:1},
+ name:{color:'#FFFFFF',fontSize:25,lineHeight:30,fontWeight:'900',letterSpacing:1.2,textAlign:'center'},
+ identity:{position:'absolute',top:'78%',left:'9%',right:'9%',alignItems:'center',paddingTop:5},
  brand:{fontSize:10,fontWeight:'900',letterSpacing:2.5,marginBottom:5},
  team:{color:'#E0DBE4',fontSize:12,lineHeight:16,fontWeight:'600',textAlign:'center'},
  position:{fontSize:10,lineHeight:14,fontWeight:'700',textAlign:'center',marginTop:4},
