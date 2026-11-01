@@ -30,6 +30,7 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
      <ClipPath id={id+'clip'}><Path d={silhouette}/></ClipPath>
      <LinearGradient id={id+'rim'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shades[0]}/><Stop offset="0.24" stopColor={shades[2]}/><Stop offset="0.48" stopColor={shades[0]}/><Stop offset="0.72" stopColor={shades[1]}/><Stop offset="1" stopColor={shades[2]}/></LinearGradient>
      <LinearGradient id={id+'wash'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shades[1]} stopOpacity={0.74*opacity}/><Stop offset="0.5" stopColor={shades[2]} stopOpacity={0.36*opacity}/><Stop offset="1" stopColor="#191A23"/></LinearGradient>
+     <LinearGradient id={id+'shine'} x1="0" y1="0" x2="1" y2="0"><Stop stopColor="#FFFFFF" stopOpacity="0"/><Stop offset="0.48" stopColor="#FFFFFF" stopOpacity={0.22*opacity}/><Stop offset="0.58" stopColor="#FFFFFF" stopOpacity="0"/><Stop offset="1" stopColor="#FFFFFF" stopOpacity="0"/></LinearGradient>
     </Defs>
     <Path d={silhouette} stroke="#000000" strokeWidth="7" strokeOpacity={0.3*shadow}/>
     <Path d={silhouette} stroke={shades[1]} strokeWidth="7" strokeOpacity="0.14"/>
@@ -37,6 +38,8 @@ export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180
     <G clipPath={`url(#${id}clip)`}>
      <Path d="M0 0 H180 V320 H0 Z" fill={`url(#${id}wash)`}/>
      <Path d="M14 112 L125 25 L98 64 L165 34 L75 123 L156 80 L118 132 L20 182 Z" fill={shades[1]} opacity={0.1*opacity}/>
+     <Path d="M-20 42 L82 -12 L200 270 L100 320 Z" fill={`url(#${id}shine)`} opacity={0.9}/>
+     <Path d="M-8 205 L122 45 L180 85 L38 268 Z" fill={shades[0]} opacity={0.055*opacity}/>
      <Path d="M18 108 L109 43 M25 124 L89 77 M22 145 L137 58 M20 252 L92 190 L78 278 L129 228 L152 287" stroke={shades[0]} strokeWidth="0.7" opacity={0.16*opacity}/>
      <Path d="M116 66 L139 24 L134 84 L160 64 L143 118 L112 148 L129 101 Z" fill={`url(#${id}rim)`} opacity={0.3*opacity}/>
      <Path d="M125 111 L164 80 L151 145 L125 165 L141 125 L112 154 Z" stroke={shades[0]} strokeWidth="1" opacity={0.3*opacity}/>

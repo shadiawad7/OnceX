@@ -76,7 +76,7 @@ export default function PlayerRankings({ clubId, teamId, viewerPlayerId, canOpen
   {!teamId&&group===2&&!!viewerPlayerId&&!loading&&<Text style={styles.hint}>{viewerPosition?`Posición: ${viewerPosition}`:'Tu entrenador debe asignarte una posición para ver este ranking.'}</Text>}
   {!teamId&&group===0&&!!viewerPlayerId&&!loading&&<Text style={styles.hint}>{selectedFilter?`Equipo: ${rows.find(row=>row.team_id===selectedFilter)?.team_name??'Tu equipo'}`:'Todavía no tienes un equipo asignado en este club.'}</Text>}
   <View onLayout={event=>setPodiumWidth(event.nativeEvent.layout.width)} style={[styles.podiumSection,!!teamId&&styles.teamPodium]}>
-   <View style={styles.podiumRunners}>{([2,1,3] as const).map(place=><View key={place} style={{paddingTop:place===1?0:18,marginHorizontal:-3,zIndex:place===1?2:1}}><RankingPodiumCard place={place} width={(Math.min(podiumWidth||300,520)+14)/3.08*(place===1?1.08:1)} player={podium[place-1]} canOpen={canOpenProfiles} onOpen={()=>{const player=podium[place-1];if(player)open(player.player_id);}}/></View>)}</View>
+   <View style={styles.podiumRunners}>{([2,1,3] as const).map(place=><View key={place} style={{marginHorizontal:-3,zIndex:place===1?2:1}}><RankingPodiumCard place={place} width={(Math.min(podiumWidth||300,520)+14)/3.08*(place===1?1.08:1)} player={podium[place-1]} canOpen={canOpenProfiles} onOpen={()=>{const player=podium[place-1];if(player)open(player.player_id);}}/></View>)}</View>
   </View>
   {!!error && <><Text style={styles.error}>{error}</Text><Button label="REINTENTAR" onPress={()=>setRetry(value=>value+1)}/></>}{loading && <ActivityIndicator color={colors.red}/>}
   {!loading && !error && players.length>0 && !podium.length && <Text style={styles.hint}>El podio aparecerá cuando haya puntuaciones calculadas desde los partidos.</Text>}
@@ -88,7 +88,7 @@ export default function PlayerRankings({ clubId, teamId, viewerPlayerId, canOpen
  }}/></View>;
 }
 const styles=StyleSheet.create({
- podiumSection:{alignSelf:'stretch',marginHorizontal:-8,alignItems:'center',marginTop:18,marginBottom:26,paddingTop:28,paddingBottom:18,borderRadius:30,backgroundColor:'rgba(7,7,10,0.94)',borderTopWidth:1,borderTopColor:'rgba(255,255,255,0.08)',borderBottomWidth:1,borderBottomColor:'rgba(255,255,255,0.06)'},podiumRunners:{flexDirection:'row',alignItems:'flex-start',justifyContent:'center',gap:2},teamPodium:{marginTop:16},
+ podiumSection:{alignSelf:'stretch',marginHorizontal:-8,alignItems:'center',marginTop:18,marginBottom:26,paddingTop:28,paddingBottom:18,borderRadius:30,backgroundColor:'rgba(7,7,10,0.94)',borderTopWidth:1,borderTopColor:'rgba(255,255,255,0.08)',borderBottomWidth:1,borderBottomColor:'rgba(255,255,255,0.06)'},podiumRunners:{flexDirection:'row',alignItems:'flex-end',justifyContent:'center',gap:2},teamPodium:{marginTop:16},
  medalRing:{position:'absolute',top:3,bottom:3,left:3,right:3,borderRadius:30,borderWidth:1,borderColor:'rgba(65,35,8,0.4)',borderTopColor:'rgba(255,255,255,0.8)',borderLeftColor:'rgba(255,255,255,0.6)'},
  integratedPortrait:{position:'absolute',top:-12,bottom:-6,left:5,right:5,backgroundColor:'transparent',zIndex:2},photoBlend:{position:'absolute',top:0,bottom:0,left:0,right:0,zIndex:3},
  proLabel:{color:'#D9B45D',fontSize:8,fontWeight:'900',textAlign:'center',marginTop:3},
