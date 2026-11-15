@@ -10,7 +10,7 @@ import { colors } from '../theme/colors';
 function deleteRecording(uri:string){
  try{if(Platform.OS==='web')URL.revokeObjectURL(uri);else new File(uri).delete();}catch{ /* Cache cleanup is best effort. */ }
 }
-export default function MatchVoiceInput({teamId,roster,disabled,onResult,onError,onBusy}:{teamId:string;roster:HierarchyItem[];disabled:boolean;onResult:(draft:MatchDraft,transcript:string)=>void;onError:(message:string,transcript?:string)=>void;onBusy:(busy:boolean)=>void}){
+export default function MatchVoiceInput({teamId,roster,disabled,hasTranscript=false,onResult,onError,onBusy}:{teamId:string;roster:HierarchyItem[];disabled:boolean;hasTranscript?:boolean;onResult:(draft:MatchDraft,transcript:string)=>void;onError:(message:string,transcript?:string)=>void;onBusy:(busy:boolean)=>void}){
  const recorder=useAudioRecorder(RecordingPresets.HIGH_QUALITY),state=useAudioRecorderState(recorder);
  const [working,setWorking]=useState(false),[hasRecording,setHasRecording]=useState(false);
  const active=useRef(true),locked=useRef(false),pendingUri=useRef<string|null>(null);
@@ -42,17 +42,8 @@ export default function MatchVoiceInput({teamId,roster,disabled,onResult,onError
    locked.current=false;if(active.current){setWorking(false);setHasRecording(!processed&&!!uri);onBusy(false);}
   }
  }
- async function discard(){
-  if(locked.current)return;locked.current=true;
-  try{
-   if(recorder.isRecording)await recorder.stop();await setAudioModeAsync({allowsRecording:false});
-   const uri=pendingUri.current??recorder.uri;if(uri)deleteRecording(uri);pendingUri.current=null;
-  }catch{ /* Discarding must still unlock manual entry. */ }
-  finally{locked.current=false;if(active.current){setHasRecording(false);onBusy(false);}}
- }
  return <View>
-  <Button secondary label={working?'PROCESANDO…':state.isRecording?'TERMINAR Y GENERAR BORRADOR':hasRecording?'GENERAR DESDE GRABACIÓN':'🎙 DICTAR PARTIDO'} disabled={working||disabled} onPress={()=>{void (state.isRecording||hasRecording?generate():record());}}/>
-  <Text style={{color:colors.muted,fontSize:12,marginTop:8}}>{state.isRecording?`Grabando · ${Math.floor(state.durationMillis/1000)} s / 120 s`:hasRecording?'Grabación disponible. Puedes enviarla de nuevo o descartarla.':'Una grabación → transcripción → borrador. Revisa después todos los datos.'}</Text>
-  {hasRecording&&!working&&<Button secondary label="DESCARTAR GRABACIÓN" onPress={()=>{void discard();}} disabled={disabled}/>}
+  <Button secondary label={working?'PROCESANDO…':state.isRecording?'TERMINAR':hasRecording?'INTENTAR DE NUEVO':hasTranscript?'GRABAR DE NUEVO':'🎙 DICTAR PARTIDO'} disabled={working||disabled} onPress={()=>{void (state.isRecording||hasRecording?generate():record());}}/>
+  {state.isRecording&&<Text style={{color:colors.muted,fontSize:12,marginTop:8}}>Grabando · {Math.floor(state.durationMillis/1000)} s / 120 s</Text>}
  </View>;
 }

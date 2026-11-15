@@ -1,3 +1,5 @@
+import TeamFederationFields from '../components/TeamFederationFields';
+import type { FederationGroup } from '../lib/federationCatalog';
 import { checkTeamJersey, useTeamJerseyAvailability } from '../hooks/useTeamJerseyAvailability';
 import { saveClubPhoto } from '../lib/clubPhotos';
 import SelectionList from '../components/SelectionList';
@@ -6,12 +8,12 @@ import { parseBirthDate } from '../lib/playerDetails';
 import { client } from '../lib/hierarchy';
 import ProfilePhotoPicker from '../components/ProfilePhotoPicker';
 import { saveProfilePhoto, type ProfilePhoto } from '../lib/profilePhotos';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import AccountShell from '../components/AccountShell';
 import Button from '../components/Button';
-import TeamCategoryPicker from '../components/TeamCategoryPicker';
+import { teamCategoryFromFederation } from '../lib/teamFederationCategory';
 import { createHierarchyAccount, createTeam, type ProvisionResult, type ProvisionKind } from '../lib/hierarchy';
 import { colors } from '../theme/colors';
 const names: Record<ProvisionKind,string> = { club: 'club', team: 'equipo', coach: 'entrenador', player: 'jugador' };
@@ -31,21 +33,26 @@ function CreateForm({ kind, clubId, teamId, coachId, actingCoachId }: { kind: Pr
  const jerseyCheck=useTeamJerseyAvailability(kind==='player'?teamId:undefined,jersey,created?.user_id);
  const [name, setName] = useState(''); const [email, setEmail] = useState('');
  const [password, setPassword] = useState(''); const [confirmation, setConfirmation] = useState('');
- const [category, setCategory] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+ const [federationGroup,setFederationGroup]=useState<FederationGroup|null>(null),[unlinkedTeam,setUnlinkedTeam]=useState(false);
+ const teamSubmitLock=useRef(false);
+ const category=unlinkedTeam?'':teamCategoryFromFederation(federationGroup);
+ const [busy, setBusy] = useState(false); const [error, setError] = useState('');
  useEffect(()=> {if(kind!=='player'||coachId||!teamId)return;let active=true;
   void (async()=> {let query=client().from('team_members').select('user_id,profiles!team_members_profile_fk(full_name)').eq('team_id',teamId).eq('role_code','coach');if(actingCoachId)query=query.eq('user_id',actingCoachId);const result=await query.order('user_id');if(result.error)throw result.error;if(active)setCoaches((result.data as unknown as {user_id:string;profiles:{full_name:string}}[]).map(row=>({value:row.user_id,label:row.profiles.full_name||'Entrenador'})));})().catch(()=>{if(active)setError('No se han podido cargar los entrenadores del equipo. Vuelve a abrir el alta.');});
   return()=>{active=false;};
  },[kind,coachId,teamId,actingCoachId]);
  const submit = async () => {
   if (kind === 'team') {
-   if (!name.trim() || !category || !clubId) { setError('Completa el nombre y la categoría del equipo.'); return; }
-   setBusy(true); setError('');
-   try { const id = await createTeam({ name, category, clubId }); router.replace({ pathname: '/teams/[id]', params: { id } }); }
+   if(teamSubmitLock.current)return;
+   if (!name.trim() || !clubId) { setError('Completa el nombre del equipo.'); return; }
+   if(!unlinkedTeam&&!federationGroup){setError('Selecciona la temporada, competición, grupo y equipo federativo.');return;}
+   teamSubmitLock.current=true;setBusy(true); setError('');
+   try { const id = await createTeam({ name, category, clubId, federationGroup:unlinkedTeam?null:federationGroup }); router.replace({ pathname: '/teams/[id]', params: { id } }); }
    catch (reason) { setError(reason instanceof Error ? reason.message : 'No se ha podido crear el equipo.'); }
-   finally { setBusy(false); }
+   finally { teamSubmitLock.current=false;setBusy(false); }
    return;
   }
-  if (!created && (!name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || password.length < 8 || password.length > 128 || password !== confirmation)) { setError('Completa el nombre y email, y confirma una contraseña de entre 8 y 128 caracteres. Selecciona la categoría si creas un equipo.'); return; }
+  if (!created && (!name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || password.length < 8 || password.length > 128 || password !== confirmation)) { setError('Completa el nombre y email, y confirma una contraseña de entre 8 y 128 caracteres. '); return; }
   if(kind==='player' && !selectedCoach) {setError('Selecciona un entrenador de este equipo. Si no hay ninguno, créalo primero.');return;}
   if(kind==='player' && (!photo || !position || !parseBirthDate(birth) || !/^\d{1,2}$/.test(jersey) || Number(jersey)<1 || Number(jersey)>99)) {setError('Completa la foto, posición, fecha de nacimiento y dorsal (1–99).');return;}
   if(kind==='player'&&!jerseyCheck.available){setError(jerseyCheck.message||'Comprueba el dorsal antes de continuar.');return;}
@@ -72,7 +79,7 @@ function CreateForm({ kind, clubId, teamId, coachId, actingCoachId }: { kind: Pr
   {(kind==='coach'||kind==='player'||kind==='club') && <ProfilePhotoPicker label={kind==='club'?'Foto del club (opcional)':'Foto de perfil'} circular={kind==='club'} aspect={kind==='club'?[1,1]:[3,4]} value={photo} onChange={setPhoto} disabled={busy} onError={setError}/>}
   {kind==='player' && !coachId && <><Text style={styles.body}>Entrenador responsable</Text><SelectionList label="Entrenador del equipo" value={selectedCoach} options={coaches} onChange={setSelectedCoach} disabled={busy||!!created}/></>}
   {kind==='player' && <><Text style={styles.body}>Posición</Text><SelectionList label="Posición" value={position} options={['Portero','Defensa','Centrocampista','Delantero'].map(value=>({value,label:value}))} onChange={setPosition} disabled={busy}/><Text style={styles.body}>Fecha de nacimiento</Text><BirthDateCalendar value={birth} onChange={setBirth} disabled={busy}/><Text style={styles.body}>Dorsal</Text><TextInput accessibilityLabel="Dorsal del jugador" value={jersey} onChangeText={value=>setJersey(value.replace(/\D/g,''))} keyboardType="number-pad" maxLength={2} editable={!busy} style={[styles.input,!!jerseyCheck.message&&!jerseyCheck.checking&&{borderColor:colors.redBright}]}/>{!!jerseyCheck.message&&<Text accessibilityLiveRegion="polite" style={jerseyCheck.checking?styles.body:styles.error}>{jerseyCheck.message}</Text>}</>}
-  {kind === 'team' && <><TeamCategoryPicker value={category} onChange={setCategory} disabled={busy}/><Text style={styles.body}>ONCEX · Todas las funcionalidades incluidas.</Text></>}
+  {kind === 'team' && <><TeamFederationFields name={name} value={federationGroup} onChange={setFederationGroup} disabled={busy} allowUnlinked unlinked={unlinkedTeam} onUnlinkedChange={setUnlinkedTeam}/></>}
   {kind !== 'team' && <><Text style={styles.body}>Email de acceso</Text><TextInput accessibilityLabel="Email de acceso" value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="emailAddress" editable={!busy && !created} style={styles.input} />
   <Text style={styles.body}>Contraseña</Text><TextInput accessibilityLabel="Contraseña" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" autoCorrect={false} textContentType="newPassword" editable={!busy && !created} style={styles.input} />
   <Text style={styles.body}>Confirmar contraseña</Text><TextInput accessibilityLabel="Confirmar contraseña" value={confirmation} onChangeText={setConfirmation} secureTextEntry autoCapitalize="none" autoCorrect={false} editable={!busy && !created} style={styles.input} />

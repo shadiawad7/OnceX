@@ -1,9 +1,10 @@
+import MatchPlayerDisclosure from './MatchPlayerDisclosure';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import ProfilePortrait from './ProfilePortrait';
 import Button from './Button';
-import { pointBreakdownLabel, type MatchPlayer } from '../lib/matches';
+import { type MatchPlayer } from '../lib/matches';
 import { colors } from '../theme/colors';
 const metrics=[
  {label:'Partidos',icon:'soccer-field',color:'#48DB91',value:(p:MatchPlayer)=>(p.minutes??0)>0?1:0},
@@ -18,12 +19,11 @@ const metrics=[
 export default function MatchResultsReview({visible,players,subtitle,readOnly,busy,onClose,onEdit,onConfirm}:{visible:boolean;players:MatchPlayer[];subtitle:string;readOnly:boolean;busy:boolean;onClose:()=>void;onEdit:()=>void;onConfirm:()=>void}){
  return <Modal visible={visible} animationType="slide" onRequestClose={()=>{if(!busy)onClose();}}><SafeAreaView style={styles.safe}>
   <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel={readOnly?'Cerrar resultados':'Volver a editar estadísticas'} disabled={busy} onPress={onClose} style={styles.back}><MaterialCommunityIcons name="arrow-left" size={25} color="#FFFFFF"/></Pressable><Text style={styles.heading}>Resultados</Text><Text style={styles.status}>{readOnly?'OFICIAL':'REVISIÓN'}</Text></View>
-  <FlatList key={visible?'open':'closed'} data={players} keyExtractor={player=>player.slot_id} contentContainerStyle={styles.content} ListHeaderComponent={<View style={styles.intro}><Text style={styles.match}>{subtitle}</Text><Text style={styles.hint}>{readOnly?'Actuaciones confirmadas del partido.':'Revisa las actuaciones de todos los jugadores. Todavía no se han guardado como estadísticas oficiales.'}</Text></View>} renderItem={({item:player,index})=><View style={styles.player}>
+  <FlatList key={visible?'open':'closed'} data={players} keyExtractor={player=>player.slot_id} contentContainerStyle={styles.content} ListHeaderComponent={<View style={styles.intro}><Text style={styles.match}>{subtitle}</Text><Text style={styles.hint}>{readOnly?'Actuaciones confirmadas del partido.':'Borrador · revisa y confirma el acta.'}</Text></View>} renderItem={({item:player,index})=><MatchPlayerDisclosure name={player.player_name} detail={[player.minutes?`${player.minutes} min`:null,player.goals?`${player.goals} goles`:null,player.assists?`${player.assists} asistencias`:null,`${player.oncex_points??0} puntos`].filter(Boolean).join(' · ')}><View style={styles.player}>
    <View style={styles.cardHeading}><Text style={styles.cardBrand}>ONCEX</Text><Text style={styles.counter}>PARTIDO · {index+1} / {players.length}</Text></View>
    <View style={styles.identity}><ProfilePortrait key={player.photoUrl??player.slot_id} url={player.photoUrl} name={player.player_name} style={styles.portrait}/><View style={styles.copy}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.position}>{player.player_position}</Text><Text style={styles.role}>{player.starter?'Titular':'Suplente'}</Text></View><View style={styles.pointsRing}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.points}>{player.oncex_points??0}</Text><Text style={styles.pointsLabel}>PUNTOS</Text></View></View>
-   <View style={styles.statistics}>{metrics.map(metric=><View key={metric.label} style={styles.row}><MaterialCommunityIcons name={metric.icon} size={23} color={metric.color}/><Text style={styles.label}>{metric.label}</Text><Text style={styles.value}>{metric.value(player)}</Text></View>)}<View style={[styles.row,styles.totalRow]}><MaterialCommunityIcons name="star-circle-outline" size={23} color="#FF496B"/><Text style={[styles.label,styles.totalLabel]}>Puntos ONCEX</Text><Text style={styles.total}>{player.oncex_points??0}</Text></View></View>
-   {!!player.points_breakdown&&<Text style={styles.breakdown}>{pointBreakdownLabel(player)}</Text>}
-  </View>}/>
+   <View style={styles.statistics}>{metrics.filter(metric=>metric.value(player)>0).map(metric=><View key={metric.label} style={styles.row}><MaterialCommunityIcons name={metric.icon} size={23} color={metric.color}/><Text style={styles.label}>{metric.label}</Text><Text style={styles.value}>{metric.value(player)}</Text></View>)}<View style={[styles.row,styles.totalRow]}><MaterialCommunityIcons name="star-circle-outline" size={23} color="#FF496B"/><Text style={[styles.label,styles.totalLabel]}>Puntos ONCEX</Text><Text style={styles.total}>{player.oncex_points??0}</Text></View></View>
+  </View></MatchPlayerDisclosure>}/>
   <View style={styles.footer}>{readOnly?<><Button label="CERRAR RESULTADOS" disabled={busy} onPress={onClose}/><Pressable accessibilityRole="button" disabled={busy} onPress={onEdit} style={styles.edit}><Text style={styles.editLabel}>EDITAR RESULTADOS</Text></Pressable></>:<><Button label={busy?'GUARDANDO…':'CONFIRMAR Y GUARDAR PARTIDO'} disabled={busy} onPress={onConfirm}/><Pressable accessibilityRole="button" disabled={busy} onPress={onEdit} style={styles.edit}><Text style={styles.editLabel}>EDITAR RESULTADOS</Text></Pressable></>}</View>
  </SafeAreaView></Modal>;
 }

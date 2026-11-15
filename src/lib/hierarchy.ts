@@ -1,9 +1,11 @@
+import { confirmFederationGroup, type FederationGroup } from './federationCatalog';
+import { federationConfigurationError } from './federationCatalogStorage';
 import { profilePhotoUrls } from './profilePhotos';
 import { client } from './client';
 import { isMissingPlayerPosition } from './playerDetails';
 export { client } from './client';
 export type ProvisionKind = 'club' | 'team' | 'coach' | 'player';
-export type HierarchyItem = { id: string; name: string; subtitle?: string; role?: string; position?: string; photoUrl?: string; clubName?: string };
+export type HierarchyItem = { id: string; name: string; subtitle?: string; role?: string; position?: string; photoUrl?: string; clubName?: string; jerseyNumber?:number|null };
 export type ProvisionInput = { kind: ProvisionKind; name: string; email: string; password: string; category?: string; clubId?: string; teamId?: string; coachId?: string };
 export type ProvisionResult = { club_id: string; team_id: string | null; user_id: string; role: string };
 export async function createHierarchyAccount(input: ProvisionInput): Promise<ProvisionResult> {
@@ -17,8 +19,10 @@ export async function createHierarchyAccount(input: ProvisionInput): Promise<Pro
  if (!data?.result) throw new Error('El servidor no ha confirmado el alta.');
  return data.result;
 }
-export async function createTeam(input: { name: string; category: string; clubId: string }) {
- const result = await client().from('teams').insert({ name: input.name.trim(), category: input.category, club_id: input.clubId }).select('id').single();
+export async function createTeam(input: { name: string; category: string; clubId: string; federationGroup?:FederationGroup|null }) {
+ const federation=input.federationGroup?confirmFederationGroup(input.federationGroup,input.federationGroup.ownTeamId):null;
+ const result = await client().from('teams').insert({ name: input.name.trim(), category: input.category, club_id: input.clubId,...(federation?{federation_groups:[federation]}:{}) }).select('id').single();
+ if(result.error&&['42703','PGRST204'].includes(result.error.code))throw federationConfigurationError(result.error);
  if (result.error) throw new Error('No se ha podido crear el equipo. Comprueba que administras este club y vuelve a intentarlo.');
  return result.data.id as string;
 }
@@ -60,9 +64,10 @@ export async function listTeams(clubId: string | undefined, page: number, search
  }
  return {items:records.map(row=>({id:row.id,name:row.name,clubName:row.clubs?.name,photoUrl:urls.get(row.clubs?.photo_path??''),subtitle:`${row.clubs?.name??''} · ${row.category}`})),count:result.count??0};
 }
-export async function listTeamPeople(teamId: string, roles: string[], page: number, search: string, coachId?: string) {
+export async function listTeamPeople(teamId: string, roles: string[], page: number, search: string, coachId?: string, options:{photos?:boolean;jerseyNumbers?:boolean}={}) {
+ const withPhotos=options.photos!==false;
  const run = (includePosition: boolean) => {
-  const profileColumns = includePosition ? 'full_name,position' : 'full_name';
+  const profileColumns = (includePosition ? 'full_name,position' : 'full_name')+(options.jerseyNumbers?',jersey_number':'');
   let query = client().from('team_members').select(`user_id,role_code,profiles!team_members_profile_fk!inner(${profileColumns}),teams(clubs(name))`, { count: 'exact' }).eq('team_id', teamId).in('role_code', roles);
   if (coachId) query = query.eq('coach_id',coachId);
   if (search.trim()) query = query.ilike('profiles.full_name', `%${search.trim().replace(/[%_]/g, '')}%`);
@@ -72,10 +77,10 @@ export async function listTeamPeople(teamId: string, roles: string[], page: numb
  if (isMissingPlayerPosition(result.error)) result = await run(false);
  if (result.error) throw result.error;
  const ids = [...new Set((result.data as unknown as {user_id:string}[]).map(row=>row.user_id))];
- const photos = ids.length ? await client().from('profiles').select('id,photo_path').in('id',ids) : null;
+ const photos = withPhotos&&ids.length ? await client().from('profiles').select('id,photo_path').in('id',ids) : null;
  const paths = new Map<string,string>((photos?.data ?? []).filter(row=>row.photo_path).map(row=>[row.id,row.photo_path]));
  const urls = await profilePhotoUrls([...paths.values()]);
- return { items: (result.data as unknown as { user_id: string; role_code: string; profiles: { full_name: string; position?: string }; teams: { clubs: { name: string } | null } }[]).map(row => ({ id: row.user_id, photoUrl: urls.get(paths.get(row.user_id) ?? ''), name: row.profiles.full_name || 'Sin nombre', position: row.profiles.position, role: row.role_code, subtitle: row.role_code === 'player' ? `${row.teams?.clubs?.name ?? 'Sin club asignado'} · ${row.profiles.position?.trim() || 'Posición sin definir'}` : undefined })), count: result.count ?? 0 };
+ return { items: (result.data as unknown as { user_id: string; role_code: string; profiles: { full_name: string; position?: string;jersey_number?:number|null }; teams: { clubs: { name: string } | null } }[]).map(row => ({ id: row.user_id, photoUrl: urls.get(paths.get(row.user_id) ?? ''), name: row.profiles.full_name || 'Sin nombre', position: row.profiles.position, jerseyNumber:row.profiles.jersey_number, role: row.role_code, subtitle: row.role_code === 'player' ? `${row.teams?.clubs?.name ?? 'Sin club asignado'} · ${row.profiles.position?.trim() || 'Posición sin definir'}` : undefined })), count: result.count ?? 0 };
 }
 
 // Native fetch responses may come from another polyfill: don't rely on instanceof.

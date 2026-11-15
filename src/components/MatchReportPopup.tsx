@@ -6,7 +6,7 @@ import Button from './Button';
 import { loadMatchSummary, matchError, type MatchSummary } from '../lib/matches';
 import { colors } from '../theme/colors';
 
-const groups=[{field:'goals',label:'Goleadores',empty:'Sin goles registrados.'},{field:'assists',label:'Asistencias',empty:'Sin asistencias registradas.'},{field:'own_goals',label:'Goles en propia',empty:'Sin goles en propia.'},{field:'yellow_cards',label:'Tarjetas amarillas',empty:'Sin tarjetas amarillas.'},{field:'red_cards',label:'Tarjetas rojas',empty:'Sin tarjetas rojas.'}] as const;
+const groups=[{field:'goals',label:'Goleadores'},{field:'assists',label:'Asistencias'},{field:'own_goals',label:'Goles en propia'},{field:'yellow_cards',label:'Tarjetas amarillas'},{field:'red_cards',label:'Tarjetas rojas'}] as const;
 
 export default function MatchReportPopup({matchId,teamId,onClose}:{matchId:string;teamId:string;onClose:()=>void}){
  const [summary,setSummary]=useState<MatchSummary|null>(null);
@@ -29,10 +29,10 @@ export default function MatchReportPopup({matchId,teamId,onClose}:{matchId:strin
    {summary&&<>
     <Text style={styles.opponent}>vs {summary.match.opponent}</Text><Text style={styles.score}>{summary.match.goals_for??'—'} – {summary.match.goals_against??'—'}</Text>
     <Text style={styles.meta}>{summary.match.played_on.split('-').reverse().join('/')} · {summary.match.duration} min · {summary.match.venue==='away'?'Visitante':summary.match.venue==='home'?'Local':'Sede sin indicar'}</Text>
-    <Text style={styles.note}>Eventos registrados de tu equipo. El acta no incluye el minuto de cada acción.</Text>
     {groups.map(group=>{
      const players=summary.players.filter(player=>player[group.field]>0);
-     return <View key={group.field} style={styles.group}><Text style={styles.groupTitle}>{group.label}</Text>{players.length?players.map(player=><View key={player.slot_id} style={styles.event}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.count}>{player[group.field]}</Text></View>):<Text style={styles.empty}>{group.empty}</Text>}</View>;
+     if(!players.length)return null;
+     return <View key={group.field} style={styles.group}><Text style={styles.groupTitle}>{group.label}</Text>{players.map(player=><View key={player.slot_id} style={styles.event}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.count}>{player[group.field]}</Text></View>)}</View>;
     })}
     <Button label="VER ESTADÍSTICAS DE JUGADORES" onPress={openPlayers}/>
     <Pressable accessibilityRole="button" onPress={()=>{onClose();router.push({pathname:'/teams/match',params:{teamId,matchId,edit:'1'}});}} style={styles.edit}><Text style={styles.editText}>Revisar o corregir el acta</Text></Pressable>

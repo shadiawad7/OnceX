@@ -1,83 +1,93 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Svg, { ClipPath, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
-import ProfilePortrait from './ProfilePortrait';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Stop } from 'react-native-svg';
 import { LinearGradient as NameGradient } from 'expo-linear-gradient';
+import ProfilePortrait from './ProfilePortrait';
+import { client } from '../lib/client';
 import type { RankingPlayer } from '../lib/rankings';
 import { podiumGoldColorPercent, podiumSilverColorPercent, podiumBronzeColorPercent, podiumShadowOpacityPercent } from '../theme/colors';
 
-// Tamaño de toda la carta: foto, texto, marco y corona. 100 = normal, 80 = menor, 120 = mayor.
-const PODIUM_CARD_SIZE_PERCENT = 100;
-const BASE_CARD_WIDTH = 180;
-
-// Silueta de la OnceX Card, adaptada al tamaño del podio.
-const silhouette='M90 5 C82 14 74 19 65.5 12 H57.5 C41.5 16 27 36 7 44 V271.5 C7 283 21.5 286.5 37.5 292 L72.5 306 Q83.5 311 90 317 Q96.5 311 107.5 306 L142.5 292 C158.5 286.5 173 283 173 271.5 V44 C153 36 138.5 16 122.5 12 H114.5 C106 19 98 14 90 5 Z';
-const metals={1:['#FFF1B5','#D8B65E','#715120'],2:['#F1F5FA','#B4C0CE','#505E70'],3:['#FFD0AC','#CE8B5B','#6F3C2D']} as const;
+// Escala de toda la carta. 100 = tamaño calculado para que quepan las tres.
+const PODIUM_CARD_SIZE_PERCENT=100;
+const BASE_CARD_WIDTH=240;
+const outline='M120 9 L140 23 L157 19 Q195 51 232 66 V345 Q232 362 214 371 L147 394 L120 412 L93 394 L26 371 Q8 362 8 345 V66 Q45 51 83 19 L100 23 Z';
+const palettes={
+ 1:{light:'#FFF8D1',metal:'#FFCE47',shade:'#8E580A',base:'#1B1205',facet:'#BE8B13',beam:'#FFF2A1'},
+ 2:{light:'#F0F9FF',metal:'#C1D5E9',shade:'#47627E',base:'#071420',facet:'#326C9D',beam:'#AEE1FF'},
+ 3:{light:'#FFE6CF',metal:'#F49E64',shade:'#914829',base:'#251109',facet:'#AF4C22',beam:'#FFD5B2'},
+} as const;
+const metrics=[{label:'PJ',key:'Partidos'},{label:'MIN',key:'Minutos'},{label:'GOL',key:'Goles'},{label:'ASI',key:'Asistencias'}] as const;
 export default function RankingPodiumCard({player,place,canOpen,onOpen,width=180}:{player?:RankingPlayer;place:1|2|3;canOpen:boolean;onOpen:()=>void;width?:number}){
  const id=useId().replace(/:/g,'');
- const scale=(width/BASE_CARD_WIDTH)*Math.max(1,PODIUM_CARD_SIZE_PERCENT)/100;
- const height=place===1?364:340;
- const shades=metals[place];
- const opacity=Math.min(100,Math.max(0,{1:podiumGoldColorPercent,2:podiumSilverColorPercent,3:podiumBronzeColorPercent}[place]))/100;
- const shadow=Math.min(100,Math.max(0,podiumShadowOpacityPercent))/100;
- return <View style={{width:BASE_CARD_WIDTH*scale,height:(height+36)*scale,flexShrink:0}}>
- <Pressable accessibilityRole="button" accessibilityLabel={`${place}º puesto. ${player?.full_name??'Pendiente'}`} accessibilityState={{disabled:!player||!canOpen}} disabled={!player||!canOpen} onPress={onOpen} style={({pressed})=>[styles.card,{width:BASE_CARD_WIDTH,height,top:32*scale,transform:[{scale}]},pressed&&{opacity:0.8}]}>
-  {place===1&&<MaterialCommunityIcons name="crown" size={32} color={shades[1]} style={styles.crown}/>}
-  <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
-   <Svg width="100%" height="100%" viewBox="0 0 180 320" preserveAspectRatio="none" aria-hidden fill="none">
-    <Defs>
-     <ClipPath id={id+'clip'}><Path d={silhouette}/></ClipPath>
-     <LinearGradient id={id+'rim'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shades[0]}/><Stop offset="0.24" stopColor={shades[2]}/><Stop offset="0.48" stopColor={shades[0]}/><Stop offset="0.72" stopColor={shades[1]}/><Stop offset="1" stopColor={shades[2]}/></LinearGradient>
-     <LinearGradient id={id+'wash'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shades[1]} stopOpacity={0.74*opacity}/><Stop offset="0.5" stopColor={shades[2]} stopOpacity={0.36*opacity}/><Stop offset="1" stopColor="#191A23"/></LinearGradient>
-     <LinearGradient id={id+'shine'} x1="0" y1="0" x2="1" y2="0"><Stop stopColor="#FFFFFF" stopOpacity="0"/><Stop offset="0.48" stopColor="#FFFFFF" stopOpacity={0.22*opacity}/><Stop offset="0.58" stopColor="#FFFFFF" stopOpacity="0"/><Stop offset="1" stopColor="#FFFFFF" stopOpacity="0"/></LinearGradient>
-    </Defs>
-    <Path d={silhouette} stroke="#000000" strokeWidth="7" strokeOpacity={0.3*shadow}/>
-    <Path d={silhouette} stroke={shades[1]} strokeWidth="7" strokeOpacity="0.14"/>
-    <Path d={silhouette} fill="#191A23" stroke={`url(#${id}rim)`} strokeWidth="1.8"/>
-    <G clipPath={`url(#${id}clip)`}>
-     <Path d="M0 0 H180 V320 H0 Z" fill={`url(#${id}wash)`}/>
-     <Path d="M14 112 L125 25 L98 64 L165 34 L75 123 L156 80 L118 132 L20 182 Z" fill={shades[1]} opacity={0.1*opacity}/>
-     <Path d="M-20 42 L82 -12 L200 270 L100 320 Z" fill={`url(#${id}shine)`} opacity={1}/>
-     <Path d="M8 182 L104 62 L170 96 L52 226 Z" fill="#FFFFFF" opacity={0.09*opacity}/>
-     <Path d="M-8 205 L122 45 L180 85 L38 268 Z" fill={shades[0]} opacity={0.055*opacity}/>
-     <Path d="M18 108 L109 43 M25 124 L89 77 M22 145 L137 58 M20 252 L92 190 L78 278 L129 228 L152 287" stroke={shades[0]} strokeWidth="0.7" opacity={0.16*opacity}/>
-     <Path d="M116 66 L139 24 L134 84 L160 64 L143 118 L112 148 L129 101 Z" fill={`url(#${id}rim)`} opacity={0.3*opacity}/>
-     <Path d="M125 111 L164 80 L151 145 L125 165 L141 125 L112 154 Z" stroke={shades[0]} strokeWidth="1" opacity={0.3*opacity}/>
-     <Path d="M16 216 H164 M76 291 H104" stroke={shades[1]} strokeWidth="0.8" opacity="0.5"/>
-    </G>
-    <Path d={silhouette} transform="translate(4 5) scale(0.955 0.968)" stroke={shades[1]} strokeWidth="0.8" opacity="0.8"/>
-    <Path d="M3 52 V268 Q3 283 35 295 M177 52 V268 Q177 283 145 295" stroke={shades[0]} strokeWidth="0.7" opacity="0.6"/>
-    <Path d="M125 45 L128 8 L133 5 L134 36 L142 23 L140 46 L128 69 Z M154 73 L164 36 L175 40 L169 58 L161 62 L154 92 L145 103 Z" fill={`url(#${id}rim)`} stroke={shades[2]} strokeWidth="0.6" opacity={0.7*opacity}/>
-   </Svg>
-  </View>
-  <View style={[styles.placeBadge,{borderColor:shades[1],backgroundColor:shades[2]}]}><View style={[styles.placeBadgeInner,{borderColor:shades[0]+'80'}]}><Text maxFontSizeMultiplier={1} style={[styles.place,{color:shades[0]}]}>{place}</Text></View></View>
-  <View style={styles.score}><Text style={styles.scoreLabel}>ONCEX</Text><Text style={[styles.scoreValue,{color:shades[0]}]}>{player?.oncex_score??'—'}</Text></View>
-  <MaterialCommunityIcons pointerEvents="none" name="shield-star" size={235} color={shades[0]} style={styles.watermark}/>
-  <View style={styles.photo}><ProfilePortrait key={player?.photo_url??player?.player_id??'empty'} url={player?.photo_url} name={player?.full_name??''} style={styles.portrait} alignTop/></View>
-  <NameGradient colors={['transparent',shades[2]+'D9','#191A23']} locations={[0,0.6,1]} style={[styles.nameBand,{borderBottomColor:shades[1]}]}>
-   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} maxFontSizeMultiplier={1} style={styles.name}>{player?.full_name?.trim().split(/\s+/)[0]?.toLocaleUpperCase('es')||'Pendiente'}</Text>
-  </NameGradient>
-  <View style={styles.identity}><Text style={[styles.brand,{color:shades[0]}]}>ONCEX</Text><Text numberOfLines={1} style={styles.team}>{player?.team_name??'Sin jugador'}</Text><Text numberOfLines={1} style={[styles.position,{color:shades[0]}]}>{player?.player_position??''}</Text></View>
-  <View style={styles.stats}><View><Text style={styles.statLabel}>PJ</Text><Text style={styles.statValue}>{player?'8':'—'}</Text></View><View><Text style={styles.statLabel}>MIN</Text><Text style={styles.statValue}>{player?'620':'—'}</Text></View><View><Text style={styles.statLabel}>GOL</Text><Text style={styles.statValue}>{player?'6':'—'}</Text></View><View><Text style={styles.statLabel}>ASI</Text><Text style={styles.statValue}>{player?'3':'—'}</Text></View></View>
- </Pressable>
+ const [totals,setTotals]=useState<{playerId:string;values:Record<string,number|null>}|null>(null);
+ const playerId=player?.player_id;
+ useEffect(()=>{let active=true;if(!playerId)return;
+  void (async()=>{const {data,error}=await client().rpc('player_match_totals',{target_player:playerId});if(active)setTotals(error?null:{playerId,values:data as Record<string,number|null>});})().catch(()=>{if(active)setTotals(null);});
+  return()=>{active=false;};
+ },[playerId]);
+ const scale=width/BASE_CARD_WIDTH*Math.max(1,PODIUM_CARD_SIZE_PERCENT)/100;
+ const height=place===1?436:420;
+ const shade=palettes[place];
+ const intensity=Math.min(100,Math.max(0,{1:podiumGoldColorPercent,2:podiumSilverColorPercent,3:podiumBronzeColorPercent}[place]))/100;
+ const glow=Math.min(100,Math.max(0,podiumShadowOpacityPercent))/100;
+ const values=totals?.playerId===playerId?totals?.values:null;
+ return <View style={{width:BASE_CARD_WIDTH*scale,height:(height+16)*scale,flexShrink:0}}>
+  <Pressable accessibilityRole="button" accessibilityLabel={`${place}º puesto. ${player?.full_name??'Pendiente'}. ONCEX Score ${player?.oncex_score??'sin evaluar'}`} accessibilityState={{disabled:!player||!canOpen}} disabled={!player||!canOpen} onPress={onOpen} style={({pressed})=>[styles.card,{width:BASE_CARD_WIDTH,height,top:8*scale,transform:[{scale}]},pressed&&{opacity:0.8}]}>
+   <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
+    <Svg width="100%" height="100%" viewBox="0 0 240 420" preserveAspectRatio="none" fill="none">
+     <Defs>
+      <ClipPath id={id+'clip'}><Path d={outline}/></ClipPath>
+      <LinearGradient id={id+'metal'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shade.light}/><Stop offset="0.2" stopColor={shade.metal}/><Stop offset="0.39" stopColor={shade.shade}/><Stop offset="0.52" stopColor={shade.light}/><Stop offset="0.75" stopColor={shade.metal}/><Stop offset="0.92" stopColor={shade.light}/><Stop offset="1" stopColor={shade.shade}/></LinearGradient>
+      <LinearGradient id={id+'body'} x1="0" y1="0" x2="1" y2="1"><Stop stopColor={shade.base}/><Stop offset="0.48" stopColor={shade.shade} stopOpacity={0.7*intensity}/><Stop offset="1" stopColor="#05080D"/></LinearGradient>
+      <LinearGradient id={id+'beam'} x1="0" y1="1" x2="1" y2="0"><Stop stopColor={shade.facet} stopOpacity="0"/><Stop offset="0.58" stopColor={shade.metal} stopOpacity={0.75*intensity}/><Stop offset="0.87" stopColor={shade.light}/><Stop offset="1" stopColor={shade.beam}/></LinearGradient>
+     </Defs>
+     <Path d={outline} stroke={shade.metal} strokeWidth="13" opacity={0.07*glow}/>
+     <Path d={outline} stroke={shade.metal} strokeWidth="7" opacity={0.22*glow}/>
+     <Path d={outline} fill={shade.base} stroke={`url(#${id}metal)`} strokeWidth="3.5"/>
+     <G clipPath={`url(#${id}clip)`}>
+      <Path d="M0 0 H240 V420 H0 Z" fill={`url(#${id}body)`}/>
+      <Path d="M-30 193 L203 27 L130 117 L233 64 L75 234 Z" fill={`url(#${id}beam)`}/>
+      <Path d="M-20 93 L117 26 L38 108 L196 43 L89 159 Z" fill={shade.facet} opacity={0.55*intensity}/>
+      <Path d="M-15 250 L254 86 L174 173 L233 145 L43 306 Z" fill={`url(#${id}beam)`} opacity={0.8*intensity}/>
+      <Path d="M15 328 L198 190 L154 254 L255 202 L117 354 Z" fill={shade.facet} opacity={0.3*intensity}/>
+      <Path d="M17 147 L166 38 L97 109 L193 61 M-5 219 L218 61 M24 254 L215 132 M21 315 L213 190 M38 372 L147 292 L114 370 L181 337" stroke={shade.light} strokeWidth="0.7" opacity={0.3*intensity}/>
+      <Path d="M12 71 L51 86 L21 139 L86 124 L55 190 L136 162 L98 242 L174 218" stroke={shade.shade} strokeWidth="2" opacity="0.8"/>
+      <Path d="M16 345 L119 401 L222 345 L120 387 Z" fill={shade.metal} opacity={0.12*intensity}/>
+     </G>
+     <Path d={outline} transform="translate(4.8 7) scale(0.96 0.965)" stroke={shade.light} strokeWidth="1" opacity="0.85"/>
+     <Path d={outline} transform="translate(8 11) scale(0.935 0.945)" stroke={shade.metal} strokeWidth="0.8" opacity="0.65"/>
+     <Path d="M52 42 L83 20 L99 26 M141 26 L157 20 L187 42 M17 332 V346 Q17 356 32 363 L93 386 M223 332 V346 Q223 356 208 363 L147 386" stroke={shade.light} strokeWidth="2.3"/>
+    </Svg>
+   </View>
+   <View style={styles.photo}><ProfilePortrait key={player?.photo_url??playerId??'empty'} url={player?.photo_url} name={player?.full_name??''} style={styles.portrait} alignTop/></View>
+   <View style={styles.score}><Text style={styles.scoreLabel}>ONCEX</Text><Text style={styles.scoreLabel}>SCORE</Text><Text maxFontSizeMultiplier={1} numberOfLines={1} adjustsFontSizeToFit style={[styles.scoreValue,{color:shade.light}]}>{player?.oncex_score??'—'}</Text></View>
+   <NameGradient pointerEvents="none" colors={['transparent',shade.base+'B8',shade.base]} locations={[0,0.55,1]} style={styles.photoFade}/>
+   <NameGradient colors={[shade.shade+'D9','#080B10',shade.base]} start={{x:0,y:0}} end={{x:1,y:1}} style={[styles.nameBand,{borderColor:shade.metal+'90'}]}>
+    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} maxFontSizeMultiplier={1} style={styles.name}>{player?.full_name?.toLocaleUpperCase('es')||'PENDIENTE'}</Text>
+   </NameGradient>
+   <View style={[styles.positionBand,{borderBottomColor:shade.metal+'80'}]}><Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.position,{color:shade.light}]}>{player?.player_position?.toLocaleUpperCase('es')||'SIN POSICIÓN'}</Text></View>
+   <View style={styles.stats}>{metrics.map((metric,index)=><View key={metric.key} style={[styles.stat,index>0&&{borderLeftWidth:0.6,borderLeftColor:shade.light+'38'}]}><Text style={styles.statLabel}>{metric.label}</Text><Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1} style={styles.statValue}>{values?.[metric.key]??'—'}</Text></View>)}</View>
+   <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
+    <Svg width="100%" height="100%" viewBox="0 0 240 420" preserveAspectRatio="none" fill="none">
+     <Circle cx="120" cy="37" r="29" fill={shade.base} stroke={shade.metal} strokeWidth="1.5"/>
+     <Path d="M115 68 Q77 59 87 16 M125 68 Q163 59 153 16" stroke={shade.metal} strokeWidth="1.3"/>
+     {Array.from({length:7},(_,i)=>{const y=17+i*7,x=87+Math.max(0,i-2)*2.4;return <G key={i}><Ellipse cx={x-3} cy={y} rx="2.5" ry="6" rotation={-35-i*5} origin={`${x-3}, ${y}`} fill={i%2?shade.metal:shade.light}/><Ellipse cx={240-x+3} cy={y} rx="2.5" ry="6" rotation={35+i*5} origin={`${240-x+3}, ${y}`} fill={i%2?shade.metal:shade.light}/></G>;})}
+     <Path d="M112 70 L120 65 L128 70 M114 410 L120 414 L126 410" stroke={shade.light} strokeWidth="1.5"/>
+    </Svg>
+   </View>
+   <View style={styles.medal}><Text maxFontSizeMultiplier={1} style={[styles.place,{color:shade.light}]}>{place}</Text></View>
+   {place===1&&<MaterialCommunityIcons pointerEvents="none" name="crown" size={23} color={shade.light} style={styles.crown}/>}
+  </Pressable>
  </View>;
 }
 const styles=StyleSheet.create({
- card:{position:'absolute',left:0,transformOrigin:'top left'},
- crown:{position:'absolute',top:-30,alignSelf:'center'},
- placeBadge:{position:'absolute',zIndex:10,top:'7%',left:'10%',width:48,height:48,borderRadius:24,borderWidth:2,alignItems:'center',justifyContent:'center'},
- placeBadgeInner:{width:35,height:35,borderRadius:18,borderWidth:1,alignItems:'center',justifyContent:'center'},
- place:{fontSize:25,lineHeight:30,fontWeight:'900',textAlign:'center'},
- score:{position:'absolute',zIndex:8,top:'20%',right:'10%',alignItems:'flex-start'},scoreLabel:{color:'#FFFFFF',fontSize:9,fontWeight:'900',letterSpacing:1},scoreValue:{fontSize:28,lineHeight:31,fontWeight:'900'},
- watermark:{position:'absolute',zIndex:1,top:'17%',alignSelf:'center',opacity:0.1},
- photo:{position:'absolute',zIndex:2,top:'20%',bottom:'25%',left:'4%',right:'4%',overflow:'hidden'},
- portrait:{width:'108%',height:'108%',marginLeft:'-4%',marginTop:'-2%',backgroundColor:'transparent'},
- nameBand:{position:'absolute',left:'7%',right:'7%',bottom:'29%',height:58,justifyContent:'flex-end',paddingHorizontal:6,paddingBottom:10,borderBottomWidth:1},
- name:{color:'#FFFFFF',fontSize:25,lineHeight:30,fontWeight:'900',letterSpacing:1.2,textAlign:'center'},
- identity:{position:'absolute',top:'70%',left:'9%',right:'9%',alignItems:'center',paddingTop:5},
- brand:{fontSize:10,fontWeight:'900',letterSpacing:2.5,marginBottom:5},
- team:{color:'#E0DBE4',fontSize:12,lineHeight:16,fontWeight:'600',textAlign:'center'},
- position:{fontSize:10,lineHeight:14,fontWeight:'700',textAlign:'center',marginTop:4},
- stats:{position:'absolute',zIndex:8,left:'9%',right:'9%',bottom:'5%',height:45,flexDirection:'row',justifyContent:'space-around',alignItems:'center',borderTopWidth:1,borderTopColor:'rgba(255,255,255,.28)'},statLabel:{color:'#FFFFFF',fontSize:8,fontWeight:'800',textAlign:'center'},statValue:{color:'#FFFFFF',fontSize:14,fontWeight:'900',textAlign:'center',marginTop:2},
+ card:{position:'absolute',top:8,left:0,transformOrigin:'top left'},
+ photo:{position:'absolute',top:'17%',left:'4%',right:'4%',bottom:'28%',overflow:'hidden'},portrait:{width:'100%',height:'100%',backgroundColor:'transparent'},
+ photoFade:{position:'absolute',left:'4%',right:'4%',bottom:'27%',height:'17%'},
+ score:{position:'absolute',top:'18%',right:'9%',width:58,alignItems:'center',paddingVertical:3,backgroundColor:'rgba(5,8,12,0.36)',borderRadius:4},scoreLabel:{color:'#FFFFFF',fontSize:12,lineHeight:13,fontWeight:'800',letterSpacing:0.6},scoreValue:{fontSize:37,lineHeight:42,fontWeight:'900',fontVariant:['tabular-nums'],maxWidth:57},
+ medal:{position:'absolute',top:'2.8%',left:92,width:56,height:49,alignItems:'center',justifyContent:'center'},place:{fontSize:40,lineHeight:46,fontWeight:'900'},crown:{position:'absolute',top:-2,left:109},
+ nameBand:{position:'absolute',left:'5%',right:'5%',top:'67%',height:36,borderTopWidth:0.8,borderBottomWidth:0.8,justifyContent:'center',paddingHorizontal:9},name:{color:'#FFFFFF',fontSize:28,lineHeight:34,fontStyle:'italic',fontWeight:'900',letterSpacing:0.8,textAlign:'center'},
+ positionBand:{position:'absolute',left:'9%',right:'9%',top:'75%',height:20,justifyContent:'center',borderBottomWidth:0.6},position:{fontSize:15,lineHeight:19,fontStyle:'italic',fontWeight:'700',textAlign:'center'},
+ stats:{position:'absolute',left:'15%',right:'15%',top:'80%',height:33,flexDirection:'row'},stat:{flex:1,alignItems:'center',justifyContent:'center',paddingHorizontal:2},statLabel:{color:'#EAE6DE',fontSize:10,lineHeight:12,fontWeight:'600'},statValue:{color:'#FFFFFF',fontSize:18,lineHeight:21,fontWeight:'800',fontVariant:['tabular-nums']},
 });

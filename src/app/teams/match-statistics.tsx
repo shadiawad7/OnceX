@@ -34,7 +34,7 @@ function MatchStatistics({teamId,matchId}:{teamId:string;matchId:string}){
   <View style={styles.identity}><PersonAvatar key={player.photoUrl??player.slot_id} url={player.photoUrl} name={player.player_name}/><View style={styles.copy}><Text style={styles.name}>{player.player_name}</Text><Text style={styles.position}>{player.player_position} · {player.starter?'Titular':'Suplente'}</Text></View></View>
   <View style={styles.metrics}>{[
    ['Minutos',player.minutes??'—'],['Goles',player.goals],['Asistencias',player.assists],['Goles en propia',player.own_goals],['Amarillas',player.yellow_cards],['Rojas',player.red_cards],['Goles encajados en juego',player.conceded_while_playing??'—'],['Portería a cero',player.clean_sheet===null?'—':player.clean_sheet?'Sí':'No'],['Puntos ONCEX',player.oncex_points??'—'],
-  ].map(([label,value])=><View key={label} style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.value}>{value}</Text></View>)}</View>
+  ].filter(([label,value])=>label==='Minutos'||label==='Puntos ONCEX'||(typeof value==='number'&&value>0)||value==='Sí').map(([label,value])=><View key={label} style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.value}>{value}</Text></View>)}</View>
   <Text style={styles.breakdown}>{pointBreakdownLabel(player)}</Text>
  </View>} ListFooterComponent={summary?<Button secondary label="VOLVER A PARTIDOS" onPress={()=>{if(router.canGoBack())router.back();else router.replace({pathname:'/teams/[id]',params:{id:teamId,section:'matches'}});}}/>:undefined}/>;
 }
