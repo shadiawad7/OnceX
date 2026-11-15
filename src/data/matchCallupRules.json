@@ -1,0 +1,109 @@
+[
+  {
+    "code": "ffcv-territorial-2026",
+    "season": "2026/2027",
+    "maximum": 18,
+    "source": "https://ffcv.es/wp/wp-content/uploads/2026/08/Circular-8-Disposiciones-Generales-Futbol-v3.0-publicada.pdf",
+    "competitions": [
+      "Lliga Comunitat FFCV",
+      "Lliga Primera FFCV",
+      "Lliga Segona FFCV",
+      "Lliga Tercera FFCV",
+      "Lliga Segunda FFCV",
+      "Lliga Comunitat Juvenil",
+      "Lliga Comunitat FFCV Juvenil",
+      "Lliga Primera FFCV Juvenil",
+      "Lliga Segona FFCV Juvenil",
+      "Lliga Tercera FFCV Juvenil"
+    ]
+  },
+  {
+    "code": "ffcv-cadete-infantil-2026",
+    "season": "2026/2027",
+    "maximum": 18,
+    "source": "https://ffcv.es/wp/wp-content/uploads/2026/09/Circular-18-Cadetes-e-Infantiles-v3.0-publicada.pdf",
+    "competitions": [
+      "Lliga Autonòmica Cadet",
+      "Lliga Preferent Cadet",
+      "Primera Cadet",
+      "Segona Cadet",
+      "Primera Regional Cadete",
+      "Segunda Regional Cadete",
+      "Lliga Autonòmica Infantil",
+      "Lliga Preferent Infantil",
+      "Primera Infantil",
+      "Segona Infantil",
+      "Primera Regional Infantil",
+      "Segunda Regional Infantil"
+    ]
+  },
+  {
+    "code": "rfef-lnj-2026",
+    "season": "2026/2027",
+    "maximum": 18,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/2._Circular_90-_LNJ___Anexo.pdf",
+    "competitions": [
+      "Liga Nacional Juvenil"
+    ]
+  },
+  {
+    "code": "rfef-dhj-2026",
+    "season": "2026/2027",
+    "maximum": 18,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/1._Circular_89-_CNL_DHJ_Y_CC___Anexo.pdf",
+    "competitions": [
+      "División de Honor Juvenil"
+    ]
+  },
+  {
+    "code": "rfef-dhj-campeones-2026",
+    "season": "2026/2027",
+    "maximum": 22,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/1._Circular_89-_CNL_DHJ_Y_CC___Anexo.pdf",
+    "competitions": [
+      "Copa de Campeones Juvenil",
+      "Copa Campeones Juvenil",
+      "Copa de Campeones"
+    ]
+  },
+  {
+    "code": "rfef-tercera-2026",
+    "season": "2026/2027",
+    "maximum": 20,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/4._Circular_87_-_CNL_Tercera_Federacion___Anexo.pdf",
+    "competitions": [
+      "Tercera Federación",
+      "Tercera RFEF"
+    ]
+  },
+  {
+    "code": "rfef-segunda-2026",
+    "season": "2026/2027",
+    "maximum": 20,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/3._Circular_86_-_CNL_Segunda_Federacion___Anexo.pdf",
+    "competitions": [
+      "Segunda Federación",
+      "Segunda RFEF"
+    ]
+  },
+  {
+    "code": "rfef-primera-2026",
+    "season": "2026/2027",
+    "maximum": 23,
+    "source": "https://rfef.es/sites/default/files/pdf/circulares/2._Circular_85_-_CNL_Primera_Federacion___Anexo.pdf",
+    "competitions": [
+      "Primera Federación",
+      "Primera RFEF"
+    ]
+  },
+  {
+    "code": "ffcv-nostra-copa-2026",
+    "season": "2026/2027",
+    "maximum": 20,
+    "source": "https://ffcv.es/wp/wp-content/uploads/2026/09/Circular-21-La-Nostra-Copa-Futbol-11-v3.0-publicada.pdf",
+    "competitions": [
+      "La Nostra Copa",
+      "Copa Comunitat Mediterránea La Nostra Copa"
+    ]
+  }
+]

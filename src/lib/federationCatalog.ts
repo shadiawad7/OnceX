@@ -1,5 +1,5 @@
 export type FederationTeam={id:string;name:string;badgeUrl?:string};
-export type FederationGroup={source:'ffcv';seasonId:string;seasonCode:string;competitionId:string;competitionName:string;groupId:string;groupName:string;sourceUrl:string;teams:FederationTeam[];ownTeamId:string;importedAt:string};
+export type FederationGroup={source:'ffcv';modality?:string;seasonId:string;seasonCode:string;competitionId:string;competitionName:string;groupId:string;groupName:string;sourceUrl:string;teams:FederationTeam[];ownTeamId:string;importedAt:string};
 export type FederationSnapshot=Omit<FederationGroup,'ownTeamId'|'importedAt'>;
 export const FFCV_CLASSIFICATIONS_URL='https://ffcv.es/competiciones/?view=clasificaciones#clasificaciones';
 const code=(value:unknown)=>typeof value==='string'&&/^\d{1,15}$/.test(value)?value:null;
@@ -29,7 +29,7 @@ export function parseFederationSnapshot(value:unknown):FederationSnapshot{
  });
  // Rebuild a canonical source URL: no arbitrary URL or embedded credentials are stored.
  const url=new URL(FFCV_CLASSIFICATIONS_URL);url.searchParams.set('cod_temporada',data.seasonId!);url.searchParams.set('cod_competicion',data.competitionId!);url.searchParams.set('cod_grupo',data.groupId!);
- return {source:'ffcv',seasonId:data.seasonId!,seasonCode:`${season[1]}/${season[2]}`,competitionId:data.competitionId!,competitionName:label(data.competitionName),groupId:data.groupId!,groupName:label(data.groupName),sourceUrl:url.href,teams};
+ return {source:'ffcv',modality:label(data.modality)||undefined,seasonId:data.seasonId!,seasonCode:`${season[1]}/${season[2]}`,competitionId:data.competitionId!,competitionName:label(data.competitionName),groupId:data.groupId!,groupName:label(data.groupName),sourceUrl:url.href,teams};
 }
 export function confirmFederationGroup(snapshot:unknown,ownTeamId:string,expectedSeason?:string|null):FederationGroup{
  const group=parseFederationSnapshot(snapshot);
@@ -45,7 +45,7 @@ export function opponentBadgeUrl(group:FederationGroup|null|undefined,name:strin
 export const FFCV_READ_VISIBLE_GROUP_SCRIPT=`(function(){
  try{
   function selected(id){var el=document.getElementById(id);if(!el)return {id:'',name:''};return {id:el.value,name:(el.options[el.selectedIndex]||{}).text||''};}
-  var season=selected('sel-temporada'),competition=selected('sel-competicion'),group=selected('sel-grupo'),journey=selected('sel-jornada');
+  var season=selected('sel-temporada'),modality=selected('sel-cat-grupo'),competition=selected('sel-competicion'),group=selected('sel-grupo'),journey=selected('sel-jornada');
   var container=document.querySelector('[data-clasif-tabs="clasif_'+group.id+'_'+journey.id+'"]');
   if(!container)throw new Error('Selecciona el grupo y espera a que termine de cargar la clasificación.');
   var table=container.querySelector('table');
@@ -55,6 +55,6 @@ export const FFCV_READ_VISIBLE_GROUP_SCRIPT=`(function(){
    if(!team)return null;
    return {id:row.getAttribute('data-codequipo')||team.getAttribute('data-codequipo')||'',name:team.getAttribute('data-team-name')||'',badgeUrl:image?(image.currentSrc||image.src):null};
   }).filter(Boolean);
-  window.ReactNativeWebView.postMessage(JSON.stringify({type:'oncex.ffcv.group',data:{source:'ffcv',seasonId:season.id,seasonCode:season.name.trim(),competitionId:competition.id,competitionName:competition.name,groupId:group.id,groupName:group.name,teams:teams}}));
+  window.ReactNativeWebView.postMessage(JSON.stringify({type:'oncex.ffcv.group',data:{source:'ffcv',modality:modality.name,seasonId:season.id,seasonCode:season.name.trim(),competitionId:competition.id,competitionName:competition.name,groupId:group.id,groupName:group.name,teams:teams}}));
  }catch(error){window.ReactNativeWebView.postMessage(JSON.stringify({type:'oncex.ffcv.error',message:error.message||'No se ha podido leer el grupo.'}));}
 })();true;`;

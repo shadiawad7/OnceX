@@ -1,3 +1,4 @@
+import { matchCallupRule, callupLimitError } from '../../lib/matchCallupRules';
 import FederationOpponentPicker from '../../components/FederationOpponentPicker';
 import { useFederationCatalog } from '../../hooks/useFederationCatalog';
 import { opponentBadgeUrl } from '../../lib/federationCatalog';
@@ -39,7 +40,7 @@ function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId
  const scroll=useRef<ComponentRef<typeof ScrollView>>(null);
  const subs=lineupSubstitutes(calledUp,starters);
  const [venue,setVenue]=useState<'home'|'away'|null>(null);
- const [teamName,setTeamName]=useState('');
+ const [teamName,setTeamName]=useState(''),[teamCategory,setTeamCategory]=useState('');
  const [clubBadgeUrl,setClubBadgeUrl]=useState<string>();
  const [opponent,setOpponent]=useState(''),[date,setDate]=useState('');
  const [savedId,setSavedId]=useState(matchId),[stage,setStage]=useState<'lineup'|'stats'>('lineup'),[players,setPlayers]=useState<MatchPlayer[]>([]);
@@ -54,9 +55,12 @@ function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId
  const season=seasonForMatchDate(date);
  const federation=useFederationCatalog(teamId,season);
  const rivalBadge=opponentBadgeUrl(federation.catalog,opponent);
+ const callupRule=matchCallupRule(season,teamCategory,federation.catalog);
+ const maximumCallups=callupRule?.maximum??null;
+ const overCallupLimit=!!callupLimitError(calledUp,maximumCallups);
 
  useEffect(()=>{let active=true;void (async()=>{
-  const team=await client().from('teams').select('clubs(name,photo_path)').eq('id',teamId).single();if(team.error)throw team.error;const club=team.data.clubs as unknown as {name:string;photo_path:string|null}|null;if(active)setTeamName(club?.name??'Club sin nombre');
+  const team=await client().from('teams').select('category,clubs(name,photo_path)').eq('id',teamId).single();if(team.error)throw team.error;const club=team.data.clubs as unknown as {name:string;photo_path:string|null}|null;if(active){setTeamName(club?.name??'Club sin nombre');setTeamCategory(team.data.category??'');}
   const badgeUrls=await clubPhotoUrls(club?.photo_path?[club.photo_path]:[]);if(active)setClubBadgeUrl(badgeUrls.get(club?.photo_path??''));
   const people=await listPages(page=>listTeamPeople(teamId,['player'],page,'',undefined,{photos:false,jerseyNumbers:true}),()=>active);
   const data=matchId?await loadMatchSummary(matchId):null;
@@ -66,11 +70,12 @@ function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId
   if(data){if(data.match.team_id!==teamId)throw new Error('Este partido pertenece a otro equipo.');setCorrecting(editRequested&&data.match.status==='confirmed');setMatch(data.match);setVenue(data.match.venue??null);setPlayers(data.players);setOpponent(data.match.opponent);setDate(data.match.played_on);setStarters(data.players.filter(p=>p.starter&&p.player_id).map(p=>p.player_id!));setCalledUp(data.players.filter(p=>p.player_id).map(p=>p.player_id!));setGoalsFor(data.match.goals_for==null?'':String(data.match.goals_for));setGoalsAgainst(data.match.goals_against==null?'':String(data.match.goals_against));setStage('stats');}
  })().catch(reason=>{if(active)setError(matchError(reason));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[teamId,matchId,editRequested,setError]);
  function toggleStarter(id:string){setError('');try{setStarters(toggleLineupStarter(calledUp,starters,id));}catch(reason){setError(reason instanceof Error?reason.message:'Revisa los titulares.');}}
- function toggleConvoked(id:string){const next=toggleCallup(calledUp,starters,id);setCalledUp(next.calledUp);setStarters(next.starters);setError('');}
+ function toggleConvoked(id:string){try{const next=toggleCallup(calledUp,starters,id,maximumCallups);setCalledUp(next.calledUp);setStarters(next.starters);setError('');}catch(reason){setError(reason instanceof Error?reason.message:'Revisa la convocatoria.');}}
  function showLineupStep(next:'squad'|'starters'){setLineupStep(next);setError('');scroll.current?.scrollTo({y:0,animated:true});}
  async function saveLineup(){
   if(busy)return;
   if(!venue){setError('Indica si el club juega como local o visitante.');return;}
+  const callupIssue=callupLimitError(calledUp,maximumCallups);if(callupIssue){setError(callupIssue);return;}
   if(starters.length!==11){setError('No puedes registrar estadísticas: selecciona los 11 titulares.');return;}
   if(!roster.some(player=>starters.includes(player.id)&&player.position==='Portero')){setError('Los 11 titulares deben incluir al menos un portero.');return;}
   if(!opponent.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(date)){setError('Completa el rival y elige la fecha del partido.');return;}
@@ -81,6 +86,7 @@ function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId
   return concededDuringAppearance(player.minutes,+duration,/^\d+$/.test(goalsAgainst)?+goalsAgainst:null,player.conceded_while_playing);
  }
  function validate(){
+  const callupIssue=callupLimitError(players.map(player=>player.slot_id),maximumCallups);if(callupIssue)return callupIssue+' Modifica la alineación.';
   const stepError=matchEntryStepError(venue,goalsFor,goalsAgainst,'statistics');
   if(stepError)return stepError;
   if(+goalsAgainst>0&&!participationVerified)return 'Verifica primero los minutos de los goles encajados y los cambios.';
@@ -132,20 +138,24 @@ function MatchEditor({teamId,matchId,editRequested=false}:{teamId:string;matchId
    <Text style={styles.label}>Fecha del partido</Text><MatchDateCalendar value={date} onChange={setDate} disabled={busy}/>
    <View style={styles.lineupTabs}>
     <Pressable accessibilityRole="button" accessibilityState={{selected:lineupStep==='squad'}} disabled={busy} onPress={()=>showLineupStep('squad')} style={[styles.lineupTab,lineupStep==='squad'&&styles.selected]}><Text style={styles.choiceText}>1 · Convocados ({calledUp.length})</Text></Pressable>
-    <Pressable accessibilityRole="button" accessibilityState={{selected:lineupStep==='starters',disabled:busy||calledUp.length<11}} disabled={busy||calledUp.length<11} onPress={()=>showLineupStep('starters')} style={[styles.lineupTab,lineupStep==='starters'&&styles.selected]}><Text style={styles.choiceText}>2 · Titulares ({starters.length}/11)</Text></Pressable>
+    <Pressable accessibilityRole="button" accessibilityState={{selected:lineupStep==='starters',disabled:busy||calledUp.length<11||overCallupLimit}} disabled={busy||calledUp.length<11||overCallupLimit} onPress={()=>showLineupStep('starters')} style={[styles.lineupTab,lineupStep==='starters'&&styles.selected]}><Text style={styles.choiceText}>2 · Titulares ({starters.length}/11)</Text></Pressable>
    </View>
-   <Text style={styles.counter}>{lineupStep==='squad'?`${calledUp.length} CONVOCADOS`:`${starters.length} / 11 TITULARES · ${subs.length} SUPLENTES`}</Text>
+   <Text style={styles.counter}>{lineupStep==='squad'?`${calledUp.length}${maximumCallups===null?'':` / ${maximumCallups}`} CONVOCADOS`:`${starters.length} / 11 TITULARES · ${subs.length} SUPLENTES`}</Text>
+   {!season&&<Text style={styles.text}>Elige la fecha del partido.</Text>}
+   {season&&!callupRule&&(!!teamCategory||!!federation.catalog)&&<Text style={styles.text}>Límite de esta competición pendiente de verificar.</Text>}
+   {overCallupLimit&&<Text style={styles.error}>{callupLimitError(calledUp,maximumCallups)}</Text>}
    {roster.length<11&&<Text style={styles.error}>Necesitas al menos 11 jugadores en la plantilla.</Text>}
    <View style={styles.rosterList}>{roster.filter(player=>lineupStep==='squad'||calledUp.includes(player.id)).map(player=>{
     const selected=lineupStep==='squad'?calledUp.includes(player.id):starters.includes(player.id);
-    return <Pressable key={player.id} accessibilityRole="checkbox" accessibilityLabel={`${player.name}, dorsal ${player.jerseyNumber??'sin asignar'}`} accessibilityState={{checked:selected,disabled:busy}} disabled={busy} onPress={()=>lineupStep==='squad'?toggleConvoked(player.id):toggleStarter(player.id)} style={[styles.rosterRow,selected&&styles.rosterRowSelected]}>
+    const blocked=busy||(lineupStep==='squad'&&(!season||(!selected&&maximumCallups!==null&&calledUp.length>=maximumCallups)));
+    return <Pressable key={player.id} accessibilityRole="checkbox" accessibilityLabel={`${player.name}, dorsal ${player.jerseyNumber??'sin asignar'}`} accessibilityState={{checked:selected,disabled:blocked}} disabled={blocked} onPress={()=>lineupStep==='squad'?toggleConvoked(player.id):toggleStarter(player.id)} style={[styles.rosterRow,selected&&styles.rosterRowSelected,blocked&&{opacity:0.45}]}>
      <Text maxFontSizeMultiplier={1.4} style={styles.jersey}>{player.jerseyNumber??'—'}</Text><Text style={styles.rosterName}>{player.name}</Text>
      {lineupStep==='starters'&&!selected&&<Text style={styles.subLabel}>Suplente</Text>}
      <MaterialCommunityIcons name={selected?'checkbox-marked-circle':'checkbox-blank-circle-outline'} size={23} color={selected?colors.redBright:'#82737C'}/>
     </Pressable>;
    })}</View>
-   {lineupStep==='squad'?<Button label="ELEGIR LOS 11 TITULARES →" disabled={busy||calledUp.length<11} onPress={()=>showLineupStep('starters')}/>:<>
-    <Button label={busy?'GUARDANDO…':'GUARDAR ALINEACIÓN Y CONTINUAR'} disabled={busy||starters.length!==11} onPress={()=>{void saveLineup();}}/>
+   {lineupStep==='squad'?<Button label="ELEGIR LOS 11 TITULARES →" disabled={busy||calledUp.length<11||overCallupLimit} onPress={()=>showLineupStep('starters')}/>:<>
+    <Button label={busy?'GUARDANDO…':'GUARDAR ALINEACIÓN Y CONTINUAR'} disabled={busy||starters.length!==11||overCallupLimit} onPress={()=>{void saveLineup();}}/>
     <Button secondary label="VOLVER A CONVOCADOS" disabled={busy} onPress={()=>showLineupStep('squad')}/>
    </>}
   </InputStepGuard>:<>

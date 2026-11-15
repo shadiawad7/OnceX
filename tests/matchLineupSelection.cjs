@@ -34,3 +34,13 @@ test('an existing saved lineup retains its starters and substitutes on reopening
  const existingStarters=squad.slice(0,11),existingSubs=squad.slice(11);
  assert.deepEqual(lineupSubstitutes([...existingStarters,...existingSubs],existingStarters),existingSubs);
 });
+test('blocks an additional call-up at the category limit but still allows removing one',()=>{
+ const called=Array.from({length:18},(_,index)=>`player-${index}`);
+ assert.throws(()=>toggleCallup(called,called.slice(0,11),'extra',18),/18 convocados/);
+ assert.equal(toggleCallup(called,called.slice(0,11),called[0],18).calledUp.length,17);
+});
+test('allows the final place and can reduce a selection exceeding a newly selected category limit',()=>{
+ const called=Array.from({length:20},(_,index)=>`player-${index}`);
+ assert.equal(toggleCallup(called.slice(0,17),[],called[17],18).calledUp.length,18);
+ assert.equal(toggleCallup(called,[],called[0],18).calledUp.length,19);
+});

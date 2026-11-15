@@ -1,4 +1,5 @@
-export function toggleCallup(calledUp:string[],starters:string[],id:string){
+export function toggleCallup(calledUp:string[],starters:string[],id:string,maximum:number|null=null){
+ if(!calledUp.includes(id)&&maximum!==null&&calledUp.length>=maximum)throw new Error(`Esta competición permite un máximo de ${maximum} convocados.`);
  return calledUp.includes(id)
   ?{calledUp:calledUp.filter(value=>value!==id),starters:starters.filter(value=>value!==id)}
   :{calledUp:[...calledUp,id],starters};

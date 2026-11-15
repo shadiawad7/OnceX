@@ -36,7 +36,7 @@ function readVisible({stale=false,rows=snapshot().teams,seasonName='2026-2027'}=
  let message;
  // Public DOM structure verified in the FFCV's buildClasifTable: .col-equipo,
  // .table-club-name, data-codequipo, data-team-name. No API or token simulation.
- const selects={'sel-temporada':['22',seasonName],'sel-competicion':['905431604','Tercera Federación'],'sel-grupo':['905431605','GRUP - VI'],'sel-jornada':['10','J.10']};
+ const selects={'sel-temporada':['22',seasonName],'sel-cat-grupo':['MASCULÍ F11','MASCULÍ F11'],'sel-competicion':['905431604','Tercera Federación'],'sel-grupo':['905431605','GRUP - VI'],'sel-jornada':['10','J.10']};
  const rowNodes=rows.map(item=>({getAttribute:name=>name==='data-codequipo'?item.id:null,querySelector:selector=>selector==='.col-equipo'?{querySelector:query=>query==='.table-club-name'?{getAttribute:name=>name==='data-team-name'?item.name:item.id}:query==='img'?{currentSrc:item.badgeUrl,src:item.badgeUrl}:null}:null}));
  const document={getElementById:id=>{const [value,text]=selects[id];return {value,options:[{text}],selectedIndex:0};},querySelector:selector=>!stale&&selector==='[data-clasif-tabs="clasif_905431605_10"]'?{querySelector:()=>({querySelectorAll:()=>rowNodes})}:null};
  vm.runInNewContext(lib.FFCV_READ_VISIBLE_GROUP_SCRIPT,{document,window:{ReactNativeWebView:{postMessage:value=>{message=JSON.parse(value);}}}});
